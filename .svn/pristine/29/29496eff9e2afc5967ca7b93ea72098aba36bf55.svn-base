@@ -1,0 +1,169 @@
+<template>
+  <div class="content">
+    <!-- <el-form
+      :inline="true"
+      style="margin:30px 0;line-height:40px;"
+      :model="formInline"
+      class="demo-form-inline"
+    >
+      <el-form-item label="销售姓名：">
+        <el-input v-model="formInline.user" placeholder="请输入销售姓名"></el-input>
+      </el-form-item>
+      <el-form-item label="销售类型：">
+        <el-select v-model="formInline.region" placeholder="全部">
+          <el-option label="全部" value="shanghai"></el-option>
+          <el-option label="区域二" value="beijing"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="onSubmit">查询</el-button>
+      </el-form-item>
+    </el-form> -->
+    <el-table :data="List" border class="table" ref="multipleTable">
+      <el-table-column prop="Id" align="center" label="ID"></el-table-column>
+      <el-table-column align="center" label="变更前销售">
+        <template slot-scope="scope">
+          <el-button type="text" @click="prevName(scope.row)">{{scope.row.SellerAccountName_Before}}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column prop="address" align="center" label="变更后销售">
+        <template slot-scope="scope">
+          <el-button type="text" @click="nextName(scope.row)">{{scope.row.SellerAccountName_After}}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column prop="ChangeReason" align="center" label="变更原因"></el-table-column>
+      <el-table-column prop="CreateTime" align="center" label="变更时间"></el-table-column>
+    </el-table>
+
+    <!--详情弹窗-->
+    <el-dialog :title="titleSup+'-'" :visible.sync="disNameVisiable" width="600px">
+      <table class="disNameVisiable">
+        <tr><td>销售姓名：</td><td>{{DetailList.AccountName}}</td></tr>
+        <tr><td>手机号码：</td><td>{{DetailList.Phone}}</td></tr>
+        <tr><td>性别：</td><td>{{DetailList.Sex == 1?'男':'女'}}</td></tr>
+        <tr><td>身份证：</td><td>{{DetailList.IdCardNo}}</td></tr>
+        <tr><td>职位：</td><td>{{DetailList.Level ==1?'销售':(DetailList.Level == 2?'销售主管':'大区经理')}}</td></tr>
+      </table>
+      <span slot="footer" class="dialog-footer">
+        <el-button plain @click="disNameVisiable = false">取 消</el-button>
+      </span>
+    </el-dialog>
+
+    <div class="pagination">
+      <el-pagination
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="pageSize"
+        :current-page="currentPage"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="pageCount"
+      ></el-pagination>
+    </div>
+  </div>
+</template>
+
+<script>
+
+import { sellerBusinessAccountRelList, sellerAccountDetails } from 'api/manager.js';
+
+export default {
+  data() {
+    return {
+      formInline: {
+        user: "",
+        region: ""
+      },
+      BusinessId:'',
+      titleSup:'销售详情',
+      disNameVisiable: false,
+      pageCount: 0,
+      currentPage:1,
+      pageSize: 30,
+      List: [],//列表数据
+      DetailList:[],//详情列表
+    };
+  },
+  mounted() {
+    this.BusinessId = this.$route.query.BusinessId;
+    this._sellerBusinessAccountRelList();
+  },
+  methods: {
+    onSubmit() {
+      console.log("submit!");
+    },
+    //列表数据
+    _sellerBusinessAccountRelList() {
+      const params = {
+        BusinessId : this.BusinessId,
+        pageindex : this.currentPage,
+        pagecount : this.pageSize
+      }
+      sellerBusinessAccountRelList(params).then( res => {
+        this.List = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      });
+    },
+    //销售详情
+    _sellerAccountDetails(Id) {
+      const params = {
+        Id : Id
+      }
+      sellerAccountDetails(params).then( res => {
+        this.DetailList = res.Data;
+      })
+    },
+    //分页导航尺寸更改
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this._sellerBusinessAccountRelList();
+    },
+    // 分页导航
+    handleCurrentChange(val) {
+      this.currentPage = val;
+      this._sellerBusinessAccountRelList();
+    },
+    prevName(item) {
+      this.disNameVisiable = true;
+      this._sellerAccountDetails(item.SellerAccountId_Before);
+    },
+    nextName(item) {
+      this.disNameVisiable = true;
+      this._sellerAccountDetails(item.SellerAccountId_After);
+    },
+  }
+};
+</script>
+
+<style scoped>
+.blue {
+  color: #409eff;
+}
+.disNameVisiable {
+  width: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+.disNameVisiable tr{
+    width: 100%;
+    height: 60px;
+    line-height: 60px;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    color: black;
+    text-align: left;
+}
+.disNameVisiable tr td:first-child{
+    width: 75px;
+    text-align: right;
+}
+.disNameVisiable tr td:last-child{
+  width: 90px;
+  text-align: left;
+}
+</style>

@@ -1,0 +1,112 @@
+<template>
+  <div>
+    <el-form :inline="true" class="demo-form-inline" style="margin:10px 0">
+      <el-form-item label="销售姓名:">
+        <el-input v-model="accountName" placeholder="请输入销售姓名"></el-input>
+      </el-form-item>
+      <el-form-item style="margin-left:10px">
+        从
+        <el-date-picker
+          v-model="time"
+          type="datetimerange"
+          value-format="yyyy-MM-dd HH:mm:ss"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
+        <el-button type="primary" style="margin-left:10px" size="medium" @click="search()">搜索</el-button>
+      </el-form-item>
+    </el-form>
+
+    <el-table :data="List" border class="table" ref="multipleTable">
+      <el-table-column prop="AccountId" align="center" label="ID"></el-table-column>
+      <el-table-column prop="AccountName" align="center" label="销售名字"></el-table-column>
+      <el-table-column prop="BusinessCount" align="center" label="商家数"></el-table-column>
+      <el-table-column prop="TotalAmount" align="center" label="总金额"></el-table-column>
+      <el-table-column prop="RoyaltyPoint" align="center" label="提点数"></el-table-column>
+      <el-table-column prop="RoyaltyAmount" align="center" label="提成金额"></el-table-column>
+      <el-table-column prop="StartTime" align="center" label="开始日期"></el-table-column>
+      <el-table-column prop="EndTime" align="center" label="截止日期"></el-table-column>
+      <el-table-column align="center" width="100" label="操作">
+        <template slot-scope="scope">
+          <el-button type="text" @click="Settlement(scope.row)">提成结算</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <div class="pagination">
+      <el-pagination
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="pageCount"
+      ></el-pagination>
+    </div>
+  </div>
+</template>
+
+<script>
+import { sellerRoyaltyList } from "api/manager.js";
+
+export default {
+  data() {
+    return {
+      time: "",
+      accountName: "",
+      accountMobile: "",
+      pageCount: 0,
+      pageSize: 30,
+      currentPage: 1,
+      List: []
+    };
+  },
+  mounted() {
+    this._sellerRoyaltyList();
+  },
+  methods: {
+    //列表数据
+    _sellerRoyaltyList() {
+      const params = {
+        AccountName: this.accountName,
+        StartTime: this.time[0],
+        EndTime: this.time[1],
+        pageindex: this.currentPage,
+        pagecount: this.pageSize
+      };
+      sellerRoyaltyList(params).then(res => {
+        this.List = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      });
+    },
+    //分页导航尺寸更改
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this._sellerRoyaltyList();
+    },
+    // 分页导航
+    handleCurrentChange(val) {
+      this.currentPage = val;
+      this._sellerRoyaltyList();
+    },
+    search() {
+      this.currentPage = 1;
+      this._sellerRoyaltyList();
+    },
+    Settlement(item) {
+      this.$router.push({
+        path: `/sell_CommissSettlment/${item.AccountId}`,
+        query: {
+          name: item.AccountName
+        }
+      });
+    }
+  }
+};
+</script>
+
+<style>
+</style>

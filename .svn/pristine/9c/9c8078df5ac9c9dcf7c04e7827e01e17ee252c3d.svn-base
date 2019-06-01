@@ -1,0 +1,100 @@
+<template>
+  <div>
+    <el-form :inline="true" class="demo-form-inline" style="margin:10px 0">
+      <el-form-item label="销售姓名:">
+        <el-input v-model="accountName" placeholder="请输入销售姓名"></el-input>
+      </el-form-item>
+      <el-form-item label="IP:">
+        <el-input v-model="ipAddress" placeholder="请输入IP"></el-input>
+      </el-form-item>
+      <el-form-item style="margin-left:10px">
+        从
+        <el-date-picker
+          v-model="time"
+          type="datetimerange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
+        <el-button type="primary" style="margin-left:10px" size="medium" @click="search()">搜索</el-button>
+      </el-form-item>
+    </el-form>
+
+    <el-table :data="List" border class="table" ref="multipleTable">
+      <el-table-column prop="Id" align="center" label="ID"></el-table-column>
+      <el-table-column prop="AccountName" align="center" label="销售名字"></el-table-column>
+      <el-table-column prop="LoginTime" align="center" label="登录时间"></el-table-column>
+      <el-table-column prop="LoginError" align="center" label="登录错误码"></el-table-column>
+      <el-table-column prop="LoginOutTime" align="center" label="登出时间"></el-table-column>
+      <el-table-column prop="Ip" align="center" label="IP"></el-table-column>
+    </el-table>
+
+    <div class="pagination">
+      <el-pagination
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="pageCount"
+      ></el-pagination>
+    </div>
+  </div>
+</template>
+
+<script>
+import { sellerBusinessAccountLoginList } from 'api/manager.js';
+
+export default {
+  data() {
+    return {
+      time: "",
+      accountName: "",//销售姓名
+      ipAddress:'',//IP
+      currentPage:1,
+      pageCount: 0,
+      pageSize: 30,
+      List: []
+    };
+  },
+  mounted() {
+    this._sellerBusinessAccountLoginList();
+  },
+  methods: {
+    //获取列表数据
+    _sellerBusinessAccountLoginList() {
+      const params = {
+        AccountName : this.accountName,
+        StartTime : this.time[0],
+        EndTime : this.time[1],
+        Ip : this.ipAddress,
+        pageindex : this.currentPage,
+        pagecount : this.pageSize
+      }
+      sellerBusinessAccountLoginList(params).then( res => {
+        this.List = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      })
+    },
+    //分页导航尺寸更改
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this._sellerBusinessAccountLoginList();
+    },
+    // 分页导航
+    handleCurrentChange(val) {
+      this.currentPage = val;
+      this._sellerBusinessAccountLoginList();
+    },
+    search() {
+      this.currentPage = 1;
+      this._sellerBusinessAccountLoginList();
+    },
+  }
+};
+</script>
+
+<style>
+</style>

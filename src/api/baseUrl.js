@@ -1,0 +1,1 @@
+export const uploadServerUrl = 'api/common/img/upload/14';

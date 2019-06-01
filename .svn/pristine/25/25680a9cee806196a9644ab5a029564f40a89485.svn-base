@@ -1,0 +1,190 @@
+import fetch from 'common/js/request'
+
+//查询销售人员列表
+export function sellerAccountList(params) {
+    return fetch('/api/agent/manager/seller/account/list', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//修改销售人员账户状态
+export function sellerAccountStatusModify(params) {
+    return fetch('/api/agent/manager/seller/account/status/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//修改销售人员在职状态
+export function sellerAccountPositionstatusModify(params) {
+    return fetch('/api/agent/manager/seller/account/positionstatus/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//查询销售人员详情
+export function sellerAccountDetails(params) {
+    return fetch('/api/agent/manager/seller/account/details', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//创建销售人员
+export function sellerAccountAdd(params) {
+    return fetch('/api/agent/manager/seller/account/add', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//编辑销售人员
+export function sellerAccountModify(params) {
+    return fetch('/api/agent/manager/seller/account/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//修改销售人员密码
+export function sellerAccountPasswordModify(params) {
+    return fetch('/api/agent/manager/seller/account/password/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//修改销售人员备注
+export function sellerAccountRemarkModify(params) {
+    return fetch('/api/agent/manager/seller/account/remark/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//查询销售人员提成规则列表
+export function sellerAccountRoyaltyroleList(params) {
+    return fetch('/api/agent/manager/seller/account/royaltyrole/list', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//修改销售人员提成有效期
+export function sellerAccountRoyaltytimemMdify(params) {
+    return fetch('/api/agent/manager/seller/account/royaltytime/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//添加销售人员提成规则
+export function sellerAccountRoyaltytimemAdd(params) {
+    return fetch('/api/agent/manager/seller/account/royaltyrole/add', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//编辑销售人员提成规则
+export function sellerAccountRoyaltytimemModify(params) {
+    return fetch('/api/agent/manager/seller/account/royaltyrole/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//删除销售人员提成规则
+export function sellerAccountRoyaltytimemDelete(params) {
+    return fetch('/api/agent/manager/seller/account/royaltyrole/delete', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//查询销售人员上属列表
+export function sellerAccountSuperior(params) {
+    return fetch('/api/agent/manager/seller/account/superior', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//变更销售人员主管
+export function sellerAccountDirectorModify(params) {
+    return fetch('/api/agent/manager/seller/account/director/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//设置下属/下下属提点
+export function sellerBranchRoyaltySet(params) {
+    return fetch('/api/agent/manager/seller/account/branch/royalty/set', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//获取销售人员下属列表
+export function sellerAccountBranchList(params) {
+    return fetch('/api/agent/manager/seller/account/branch/list', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//增加销售人员下属
+export function sellerAccountBranchAdd(params) {
+    return fetch('/api/agent/manager/seller/account/branch/add', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//删除销售人员下属
+export function sellerAccountBranchDelete(params) {
+    return fetch('/api/agent/manager/seller/account/branch/delete', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//查询变更销售人员下属列表
+export function sellerAccountBranch(params) {
+    return fetch('/api/agent/manager/seller/account/branch', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//变更销售人员所有下属的主管
+export function sellerAccountBranchDirectorModify(params) {
+    return fetch('/api/agent/manager/seller/account/branch/director/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//获取销售人员商家列表
+export function sellerBusinessList(params) {
+    return fetch('/api/agent/manager/seller/business/list', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//修改销售人员商家备注
+export function sellerBusinessListRemarkModify(params) {
+    return fetch('/api/agent/manager/seller/business/remark/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//设置商家绑定销售人员
+export function sellerBusinessSellerModify(params) {
+    return fetch('/api/agent/manager/seller/business/seller/modify', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//获取商家绑定销售变更记录列表
+export function sellerBusinessAccountRelList(params) {
+    return fetch('/api/agent/manager/seller/business/account/rel/list', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//查询销售人员登入日志列表
+export function sellerBusinessAccountLoginList(params) {
+    return fetch('/api/agent/manager/seller/account/login/log/list', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}
+
+//获取销售人员提成列表
+export function sellerRoyaltyList(params) {
+    return fetch('/api/agent/manager/seller/royalty/list', 'post', params).then(res => {
+        return Promise.resolve(res)
+    })
+}

@@ -1,0 +1,93 @@
+{
+  "_args": [
+    [
+      "vue-ueditor-wrap@2.4.0",
+      "E:\\woker\\gitch"
+    ]
+  ],
+  "_from": "vue-ueditor-wrap@2.4.0",
+  "_id": "vue-ueditor-wrap@2.4.0",
+  "_inBundle": false,
+  "_integrity": "sha512-c/ZtsrO+UI9JUwhGsKSRD2UIFT61mu1x4vSxmCKq8cpYm2Ah4cmUIaxY83MfwwtCa0xsqb2PrBTkbHY2LOwcuw==",
+  "_location": "/vue-ueditor-wrap",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "vue-ueditor-wrap@2.4.0",
+    "name": "vue-ueditor-wrap",
+    "escapedName": "vue-ueditor-wrap",
+    "rawSpec": "2.4.0",
+    "saveSpec": null,
+    "fetchSpec": "2.4.0"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/vue-ueditor-wrap/-/vue-ueditor-wrap-2.4.0.tgz",
+  "_spec": "2.4.0",
+  "_where": "E:\\woker\\gitch",
+  "author": {
+    "name": "郑昊川"
+  },
+  "bugs": {
+    "url": "https://github.com/HaoChuan9421/vue-ueditor-wrap/issues"
+  },
+  "description": "Vue + UEditor + v-model双向绑定",
+  "devDependencies": {
+    "babel-core": "^6.22.1",
+    "babel-eslint": "^8.2.1",
+    "babel-helper-vue-jsx-merge-props": "^2.0.3",
+    "babel-loader": "^7.1.1",
+    "babel-plugin-syntax-jsx": "^6.18.0",
+    "babel-plugin-transform-runtime": "^6.22.0",
+    "babel-plugin-transform-vue-jsx": "^3.5.0",
+    "babel-preset-env": "^1.3.2",
+    "babel-preset-stage-2": "^6.22.0",
+    "chalk": "2.0.1",
+    "copy-webpack-plugin": "^4.0.1",
+    "css-loader": "0.28.0",
+    "eslint": "^4.15.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-friendly-formatter": "^3.0.0",
+    "eslint-loader": "^1.7.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.2.0",
+    "eslint-plugin-promise": "^3.4.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "eslint-plugin-vue": "^4.0.0",
+    "friendly-errors-webpack-plugin": "^1.6.1",
+    "html-webpack-plugin": "^2.30.1",
+    "ora": "1.2.0",
+    "portfinder": "^1.0.13",
+    "rimraf": "^2.6.0",
+    "uglifyjs-webpack-plugin": "^1.1.1",
+    "vue": "^2.5.2",
+    "vue-loader": "^13.3.0",
+    "vue-template-compiler": "^2.5.2",
+    "webpack": "^3.6.0",
+    "webpack-dev-server": "^2.9.1"
+  },
+  "homepage": "https://github.com/HaoChuan9421/vue-ueditor-wrap#readme",
+  "keywords": [
+    "ueditor",
+    "vue",
+    "v-model",
+    "富文本编辑器",
+    "百度编辑器"
+  ],
+  "license": "MIT",
+  "main": "lib/vue-ueditor-wrap.min.js",
+  "name": "vue-ueditor-wrap",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HaoChuan9421/vue-ueditor-wrap.git"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "dev": "webpack-dev-server --progress --config webpack.dev.js",
+    "fix": "eslint --fix --ext .js,.vue src",
+    "lint": "eslint --ext .js,.vue src"
+  },
+  "version": "2.4.0"
+}

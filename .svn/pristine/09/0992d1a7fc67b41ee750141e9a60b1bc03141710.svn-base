@@ -1,0 +1,480 @@
+<template>
+  <div class="table">
+    <div class="container">
+      <div style="float:right; margin-bottom:6px;">
+        <el-button type="primary" @click="openAddForm()">发送</el-button>
+        <el-button type="primary" @click="openAddForm()">添加</el-button>
+      </div>
+      <el-table :data="tableData" border class="table" ref="multipleTable">
+        <el-table-column prop="TemplateSysId" align="center" label="ID"></el-table-column>
+        <el-table-column prop="SellerName" align="center" label="姓名"></el-table-column>
+        <el-table-column prop="SellerMobile" align="center" label="手机号"></el-table-column>
+        <el-table-column prop="TemplateName" align="center" label="性别"></el-table-column>
+        <el-table-column prop="TemplateName" align="center" label="状态"></el-table-column>
+        <el-table-column prop="TemplateName" align="center" label="创建时间"></el-table-column>
+       
+        <el-table-column label="操作" width="200" align="center">
+          <template slot-scope="scope">
+           <el-button type="primary" @click="jumpToTestSendRecord(scope.row)">发送详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="pagination">
+        <el-pagination
+          background
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :page-sizes="[10, 20, 30, 40, 50]"
+          :page-size="30"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="pageCount"
+        ></el-pagination>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import {
+  
+} from "api/seller.js";
+export default {
+  name: "SmsTemplateTestSend",
+  data() {
+    return {
+      tableData: [],
+      cur_page: 1,
+      ctId: "", // 模板Id
+      statusList: [
+        { id: 0, name: "全部" },
+        { id: 1, name: "等待审核" },
+        { id: 2, name: "正在审核" },
+        { id: 3, name: "审核拒绝" },
+        { id: 4, name: "审核通过" },
+        { id: 5, name: "管理员作废" }
+      ],
+      statusList1: [{ id: 3, name: "审核拒绝" }, { id: 5, name: "管理员作废" }],
+      ordersn: "",
+      pageCount: 0,
+      pagesize: 30,
+      aayAccountName: "商家",
+      addVisible: false,
+      editVisible: false,
+      editcVisible: false,
+      changeVisible: false,
+      channelVisible: false,
+      lookVisible: false,
+      addForm: {
+        refundReason: "",
+        refundmoney: "",
+        goodsBasicMoney: "",
+        ordersn: ""
+      },
+      changeForm: {
+        accountName: "商家",
+        statusDes: "",
+        status: ""
+      },
+      channelForm: {
+        ChannelType: "",
+        SignId: "",
+        channelCode: "",
+        SellerName: ""
+      },
+      lookForm: {
+        accountName: "",
+        appId: "",
+        providerCode: "",
+        appSecret: "",
+        sign: ""
+      },
+      editcForm: {
+        templatename: "",
+        templateid: "",
+        templatecontent: "",
+        SellerName: "",
+        templatelink: "",
+        channelId: "",
+        CreateTime: "",
+        UpdateTime: ""
+      },
+      editForm: {
+        templatename: "",
+        templateid: "",
+        SellerName: "",
+        CreateTime: "",
+        UpdateTime: ""
+      },
+      addrules: {
+        refundmoney: [
+          { validator: refundMaxmoney, required: true, trigger: "blur" }
+        ],
+        refundReason: [
+          { required: true, message: "请输入退款原因", trigger: "blur" }
+        ]
+      },
+      changerules: {
+        status: [{ required: true, message: "请选择", trigger: "change" }],
+        statusDes: [{ required: true, message: "请输入描述", trigger: "blur" }]
+      },
+      channelrules: {
+        ChannelType: [
+          { required: true, message: "请选择平台", trigger: "change" }
+        ]
+      },
+      editcrules: {
+        templatelink: [
+          { required: true, message: "请输入URL", trigger: "blur" }
+        ],
+        templatecontent: [
+          { required: true, message: "请输入内容", trigger: "blur" }
+        ]
+      },
+      editrules: {
+        templatename: [
+          { required: true, message: "请输入名称", trigger: "blur" }
+        ]
+      }
+    };
+  },
+  created() {
+    this.getData();
+  },
+  computed: {},
+  methods: {
+    jumpToTestSend(item) {
+      this.$router.push({
+        path: `/smsTemplateTestSend/${item.TemplateSysId}`,
+        query: {
+          name: item.TemplateName
+        }
+      });
+    },
+    jumpToTestSendRecord(item) {
+        this.$router.push({
+        path: `/smsTemplateTestSendRecord/${item.TemplateSysId}`,
+        query: {
+          name: item.TemplateName
+        }
+      });
+    },
+    changeChannel(value) {
+      this.channelForm.ChannelType = value;
+    },
+    // 显示选择签名
+    showChannel(item) {
+      this.channelVisible = true;
+      this.ctId = item.TemplateSysId;
+      this.channelForm.SellerName = item.SellerName;
+      this._getSignPull(item.AccountId, item.providerCode);
+      this.channelForm.ChannelType = item.SignId;
+    },
+    // 选择签名
+    _submitSign(formName) {
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          const params = {
+            templateid: this.ctId,
+            signid: this.channelForm.ChannelType
+          };
+          submitSign(params).then(res => {
+            if (res.Success) {
+              this.$message({
+                showClose: true,
+                message: "提交成功",
+                type: "success"
+              });
+              this.channelVisible = false;
+              this.getData(this.cur_page);
+            } else {
+              this.$message.error(res.Message);
+            }
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    // 获取签名数据
+    async _getSignPull(id, channelcode) {
+      const params = {
+        AccountId: id,
+        ChannelCode: channelcode
+      };
+      await getSignPull(params).then(res => {
+        this.channelTypeList = res.Data;
+      });
+    },
+    // 查看第三方平台
+    look(item) {
+      this.lookVisible = true;
+      (this.lookForm.appId = item.AppId),
+        (this.lookForm.providerCode = item.ProviderCode),
+        (this.lookForm.appSecret = item.AppSecret),
+        (this.lookForm.sign = item.Sign);
+    },
+    // 显示内容编辑窗口
+    handleEditContent(item) {
+      this.editcVisible = true;
+      this.ctId = item.TemplateSysId;
+      this.editcForm.SellerName = item.SellerName;
+      this.editcForm.templatename = item.TemplateName;
+      this.editcForm.templatelink = item.SmsLink;
+      this.editcForm.templatecontent = item.SmsContent;
+      this.editcForm.channelId = item.SignId;
+      this.editcForm.CreateTime = item.CreateTime;
+      this.editcForm.UpdateTime = item.ExaminedTime;
+    },
+    // 保存编辑
+    saveEdit(formName) {
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          const params = {
+            templateid: this.ctId,
+            templatename: this.editcForm.templatename,
+            templatcontent: this.editcForm.templatecontent,
+            templatlink: this.editcForm.templatelink,
+            channelId: this.editcForm.channelId
+          };
+          editSCStatus(params).then(res => {
+            if (res.Success) {
+              this.$message({
+                showClose: true,
+                message: "修改成功",
+                type: "success"
+              });
+              this.getData(this.cur_page);
+              this.editcVisible = false;
+            } else {
+              this.$message.error(res.Message);
+            }
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    handleEdit(item) {
+      this.editVisible = true;
+      this.ctId = item.TemplateSysId;
+      this.editForm.SellerName = item.SellerName;
+      this.editForm.templatename = item.TemplateName;
+      this.editForm.CreateTime = item.CreateTime;
+      this.editForm.UpdateTime = item.ExaminedTime;
+    },
+    // 保存编辑
+    saveNameEdit(formName) {
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          const params = {
+            templateid: this.ctId,
+            templatename: this.editForm.templatename
+          };
+          editSCName(params).then(res => {
+            if (res.Success) {
+              this.$message({
+                showClose: true,
+                message: "修改成功",
+                type: "success"
+              });
+              this.getData(this.cur_page);
+              this.editcVisible = false;
+            } else {
+              this.$message.error(res.Message);
+            }
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    // 提交审核
+    _submitSCAudit(item) {
+      if (item.ExamineState != 2) {
+        this.$confirm("您确定要提交审核吗?", "提交审核", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+          .then(() => {
+            const params = {
+              TemplateId: item.TemplateSysId
+            };
+            submitSCAudit(params).then(res => {
+              if (res.Success) {
+                this.$message({
+                  showClose: true,
+                  message: "提交成功",
+                  type: "success"
+                });
+                this.getData(this.cur_page);
+              } else {
+                this.$message.error(res.Message);
+              }
+            });
+          })
+          .catch(() => {});
+      } else {
+        this.$message.error("正在审核中,请等待");
+      }
+    },
+    // 显示退款详情
+    openDetail(item) {
+      this.editVisible = true;
+      this.aayAccountName = item.PayAccountName;
+      const params = {
+        ordersn: item.OrderSN
+      };
+      getRefundDetail(params).then(res => {
+        this.editForm.refundReason = res.Data.Reason;
+        this.editForm.refundmoney = res.Data.RefundMoney / 100;
+        this.editForm.time = res.Data.FinishTime;
+      });
+    },
+    // 显示修改状态
+    changeStatus(item) {
+      this.changeVisible = true;
+      this.ctId = item.TemplateSysId;
+      this.changeForm.statusDes = item.ExamineFailReason;
+      this.changeForm.accountName = item.TemplateName;
+      // this.changeForm.status = item.Status
+    },
+    // 修改状态
+    _changeStatus(formName) {
+      this.$confirm("您确定要修改状态吗?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          this.$refs[formName].validate(valid => {
+            if (valid) {
+              const params = {
+                CtId: this.ctId,
+                Status: this.changeForm.status,
+                Des: this.changeForm.statusDes
+              };
+              changeSCStatus(params).then(res => {
+                if (res.Success) {
+                  this.$message({
+                    showClose: true,
+                    message: "修改成功",
+                    type: "success"
+                  });
+                  this.getData(this.cur_page);
+                  this.changeVisible = false;
+                } else {
+                  this.$message.error(res.Message);
+                }
+              });
+            } else {
+              return false;
+            }
+          });
+        })
+        .catch(() => {});
+    },
+    //获取状态
+    getStatus(Status) {
+      switch (Status) {
+        case 1:
+          return "等待审核";
+          break;
+        case 2:
+          return "正在审核";
+          break;
+        case 3:
+          return "审核拒绝";
+          break;
+        case 4:
+          return "审核通过";
+          break;
+        case 5:
+          return "管理员作废";
+          break;
+        default:
+          break;
+      }
+    },
+    //获取第三方状态
+    getThirdStatus(Status) {
+      switch (Status) {
+        case 0:
+          return "审核中";
+          break;
+        case 1:
+          return "审核成功";
+          break;
+        case 2:
+          return "审核失败";
+          break;
+        default:
+          break;
+      }
+    },
+    //分页导航尺寸更改
+    handleSizeChange(val) {
+      this.pagesize = val;
+      this.getData();
+    },
+    // 分页导航
+    handleCurrentChange(val) {
+      this.cur_page = val;
+      this.getData();
+    },
+    // 获取表格数据
+    async getData() {
+      const params = {
+        Content: this.content,
+        Status: this.status,
+        pageindex: this.cur_page,
+        pagecount: this.pagesize,
+        SellerName: this.username,
+        SellerPhone: this.phone
+      };
+      await getSContentTem(params).then(res => {
+        this.tableData = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      });
+    },
+    search() {
+      this.cur_page = 1;
+      this.getData();
+    },
+    getTime() {
+      if (this.time != null && this.time.length > 0) {
+        this.starttime = this.time[0];
+        this.endtime = this.time[1];
+      } else {
+        this.starttime = "";
+        this.endtime = "";
+      }
+    }
+  }
+};
+</script>
+
+<style scoped>
+.handle-box {
+  margin-bottom: 20px;
+}
+.handle-select {
+  width: 120px;
+}
+
+.handle-input {
+  width: 230px;
+  display: inline-block;
+}
+.del-dialog-cnt {
+  font-size: 16px;
+  text-align: center;
+}
+.table {
+  width: 100%;
+  font-size: 14px;
+}
+.red {
+  color: #ff0000;
+}
+</style>

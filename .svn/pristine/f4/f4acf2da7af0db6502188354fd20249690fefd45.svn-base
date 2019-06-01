@@ -1,0 +1,400 @@
+<template>
+  <div class="table">
+    <div class="container">
+      <div class="title-box">
+        <p>
+          <i></i>有效期规则
+        </p>
+      </div>
+      <div class="content-Box">
+        <label for>从</label>
+        <el-date-picker
+          v-model="time"
+          type="datetimerange"
+          value-format="yyyy-MM-dd HH:mm:ss"
+          range-separator="到"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
+        <el-button @click="save()" type="primary" size="medium">保 存</el-button>
+      </div>
+      <div class="container">
+        <div class="title-box">
+          <p>
+            <i></i>次数号规则：
+            <el-button type="primary" style="width:80px;float:right;" @click="openAddForm()">添加次数</el-button>
+          </p>
+        </div>
+        <div class="content-Box">
+          <el-table :data="tableData" fixed border class="table" ref="multipleTable">
+            <el-table-column prop="ConsumptionAmount" align="center" label="金额">
+              <template
+                slot-scope="scope"
+              >{{scope.row.ConsumptionAmount==0?"其他":scope.row.ConsumptionAmount}}</template>
+            </el-table-column>
+            <el-table-column align="center" label="提点数">
+              <template slot-scope="scope">{{scope.row.RoyaltyPoint/100}}%</template>
+            </el-table-column>
+            <el-table-column prop="UpdateTime" align="center" label="更新时间"></el-table-column>
+            <el-table-column label="操作" width="250" align="center">
+              <template slot-scope="scope">
+                <el-button type="text" icon="el-icon-edit" @click="openEditForm(scope.row)">编辑</el-button>
+                <el-button
+                  type="text"
+                  icon="el-icon-delete"
+                  class="red"
+                  @click="deleteData(scope.row)"
+                >删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+    </div>
+    <!-- 添加提成规则弹出框 -->
+    <el-dialog :title="`添加提点规则-${accountName}`" :visible.sync="addVisible" width="500px">
+      <el-form ref="addForm" :model="addForm" :rules="addFormrules" label-width="100px;">
+        <el-form-item prop="ConsumptionAmount">
+          <el-radio v-model="addFormRadio" label="1">金额</el-radio>
+          <el-input class="handle-input" v-model="addForm.ConsumptionAmount" placeholder="请填写金额"></el-input>
+        </el-form-item>
+        <el-form-item label="提点数(%):" prop="RoyaltyPoint">
+          <el-input v-model="addForm.RoyaltyPoint" style="width:146px" placeholder="请填写提点数"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="addFormOk()" size="medium">确 定</el-button>
+        <el-button @click="addVisible = false" size="medium">关 闭</el-button>
+      </span>
+    </el-dialog>
+    <!-- 编辑提成规则弹出框 -->
+    <el-dialog :title="`编辑次数号规则-${accountName}`" :visible.sync="editVisible" width="500px">
+      <el-form ref="editForm" :model="editForm" :rules="editFormrules" label-width="100px;">
+        <el-form-item prop="ConsumptionAmount">
+          <el-radio v-model="editFormRadio" label="1">金额</el-radio>
+          <el-input class="handle-input" v-model="editForm.ConsumptionAmount" placeholder="请填写金额"></el-input>
+        </el-form-item>
+        <el-form-item label="提点数(%):" prop="RoyaltyPoint">
+          <el-input v-model="editForm.RoyaltyPoint" style="width:146px" placeholder="请填写提点数"></el-input>
+        </el-form-item>
+      </el-form>
+      <div class="setPoint-tip" style="margin-top:20px" v-if="isShow">
+        <span>创建时间：{{ editForm.CreateTime }}</span>
+        <span>最后更新时间：{{ editForm.UpdateTime }}</span>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="editFormOk()" size="medium">确 定</el-button>
+        <el-button @click="editVisible = false" size="medium">关 闭</el-button>
+      </span>
+    </el-dialog>
+    <!--删除弹窗-->
+    <el-dialog title="删除提成次数" center :visible.sync="deleteVisible" width="400px">
+      <p class="text-center delete-textlog">您确定要删除该次数吗?</p>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="deleteVisible = false">取 消</el-button>
+        <el-button type="primary" @click="deletesure">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!--底部导航-->
+    <div class="pagination">
+      <el-pagination
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="TotalCount"
+      ></el-pagination>
+    </div>
+  </div>
+</template>
+
+<script>
+import {
+  sellerAccountRoyaltyroleList,
+  sellerAccountRoyaltytimemMdify,
+  sellerAccountRoyaltytimemAdd,
+  sellerAccountRoyaltytimemModify,
+  sellerAccountRoyaltytimemDelete
+} from "api/manager.js";
+
+export default {
+  name: "DelegateRoyaltyRule",
+  data() {
+    var NRaddFormFinishCount = (rule, value, callback) => {
+      if (this.addFormRadio == "1") {
+        if (this.addForm.ConsumptionAmount >= 0) {
+          callback();
+        } else {
+          callback(new Error("请填写金额"));
+        }
+      } else {
+        callback();
+      }
+    };
+    var NReditFormFinishCount = (rule, value, callback) => {
+      if (this.editFormRadio == "1") {
+        if (this.editForm.ConsumptionAmount >= 0) {
+          callback();
+        } else {
+          callback(new Error("请填写金额"));
+        }
+      } else {
+        callback();
+      }
+    };
+    return {
+      deleteId: "",
+      accountId: "",
+      accountName: "",
+      time: [],
+      pageSize: 10,
+      TotalCount: 0,
+      currentPage: 1,
+      tableData: [],
+      isShow: true,
+      deleteVisible: false,
+      addVisible: false, //添加弹窗是否显示
+      addForm: {
+        RoyaltyPoint: ""
+      },
+      addFormrules: {
+        ConsumptionAmount: [
+          {
+            validator: NRaddFormFinishCount,
+            required: true,
+            trigger: "blur",
+            type: Number
+          }
+        ],
+        RoyaltyPoint: [
+          { required: true, message: "请输入提点数", trigger: "blur" }
+        ]
+      },
+      addFormRadio: "1",
+
+      editVisible: false, //添加弹窗是否显示
+      editForm: {
+        Id: 0,
+        ConsumptionAmount: "",
+        RoyaltyPoint: "",
+        CreateTime: "",
+        UpdateTime: ""
+      },
+      editFormrules: {
+        ConsumptionAmount: [
+          {
+            validator: NReditFormFinishCount,
+            required: true,
+            trigger: "blur",
+            message: "请输入金额"
+          }
+        ],
+        RoyaltyPoint: [
+          { required: true, message: "请输入提点数", trigger: "blur" }
+        ]
+      },
+      editFormRadio: "1"
+    };
+  },
+  watch: {
+    $route(newValue, oldValue) {
+      if (newValue.path.indexOf("/sell_CommissRule") != -1) {
+        this.accountId = this.$route.params.id;
+        this._sellerAccountRoyaltyroleList();
+      }
+    }
+  },
+  created() {},
+  mounted() {
+    this.accountId = this.$route.params.id;
+    this.accountName = this.$route.query.name;
+    this._sellerAccountRoyaltyroleList();
+  },
+  methods: {
+    //重置弹出窗口
+    resetForm(formName) {
+      if (this.$refs[formName] != undefined) {
+        this.$refs[formName].resetFields();
+      }
+    },
+    save() {
+      this._sellerAccountRoyaltytimemMdify().then(res => {
+        this.$message({
+          type: "success",
+          message: "保存成功",
+          showClose: true
+        });
+      });
+    },
+    //分页导航尺寸更改
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this._sellerAccountList();
+    },
+    // 分页导航
+    handleCurrentChange(val) {
+      this.currentPage = val;
+      this._sellerAccountList();
+    },
+    //打开添加弹出框
+    openAddForm() {
+      this.resetForm("addForm");
+      this.addForm.FinishiCount = "";
+      this.addVisible = true;
+    },
+    //添加弹出框确定
+    addFormOk() {
+      this.$refs["addForm"].validate(valid => {
+        if (valid) {
+          this._sellerAccountRoyaltytimemAdd().then(val => {
+            this.addVisible = false;
+            this._sellerAccountRoyaltyroleList();
+            this.$message({
+              type: "success",
+              message: "添加成功",
+              showClose: true
+            });
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    //打开编辑弹窗
+    openEditForm(item) {
+      this.editVisible = true;
+      this.editForm = Object.assign({}, item);
+      this.editForm.RoyaltyPoint = this.editForm.RoyaltyPoint / 100;
+      this.editForm.Id = item.Id;
+      this.editForm.CreateTime = item.CreateTime;
+      this.editForm.UpdateTime = item.UpdateTime;
+    },
+    //编辑弹出框确定
+    editFormOk() {
+      this.$refs["editForm"].validate(valid => {
+        if (valid) {
+          this._sellerAccountRoyaltytimemModify().then(val => {
+            this.editVisible = false;
+            this._sellerAccountRoyaltyroleList();
+            this.$message({
+              showClose: true,
+              message: "修改成功",
+              type: "success"
+            });
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    deleteData(item) {
+      this.deleteVisible = true;
+      this.deleteId = item.Id;
+    },
+    deletesure() {
+      this._sellerAccountRoyaltytimemDelete(this.deleteId).then(val => {
+        this.$message({
+          showClose: true,
+          message: "删除成功",
+          type: "success"
+        });
+        this._sellerAccountRoyaltyroleList();
+        this.deleteVisible = false;
+      });
+    },
+    //查询销售人员提成规则列表
+    _sellerAccountRoyaltyroleList() {
+      const params = {
+        Id: this.accountId,
+        pageindex: this.currentPage,
+        pagecount: this.pageSize
+      };
+      return sellerAccountRoyaltyroleList(params).then(res => {
+        this.tableData = res.Data.List;
+        this.time =res.Data.RoyaltyStartTime=='' || res.Data.RoyaltyEndTime==''?[]: [res.Data.RoyaltyStartTime, res.Data.RoyaltyEndTime];
+      });
+    },
+    //添加销售人员提成规则
+    _sellerAccountRoyaltytimemAdd() {
+      const params = {
+        Id: this.accountId,
+        ConsumptionAmount: this.addForm.ConsumptionAmount,
+        RoyaltyPoint: this.addForm.RoyaltyPoint * 100
+      };
+      return sellerAccountRoyaltytimemAdd(params);
+    },
+    //编辑销售人员提成规则
+    _sellerAccountRoyaltytimemModify() {
+      const params = {
+        Id: this.editForm.Id,
+        ConsumptionAmount: this.editForm.ConsumptionAmount,
+        RoyaltyPoint: this.editForm.RoyaltyPoint * 100
+      };
+      return sellerAccountRoyaltytimemModify(params);
+    },
+    //删除销售人员提成规则
+    _sellerAccountRoyaltytimemDelete(Id) {
+      const params = {
+        Id: Id
+      };
+      return sellerAccountRoyaltytimemDelete(params);
+    },
+    //修改销售人员提成有效期
+    _sellerAccountRoyaltytimemMdify() {
+      const params = {
+        Id: this.accountId,
+        RoyaltyStartTime: this.time == null ? "" : this.time[0],
+        RoyaltyEndTime: this.time == null ? "" : this.time[1]
+      };
+      return sellerAccountRoyaltytimemMdify(params);
+    }
+  }
+};
+</script>
+
+<style scoped lang="less">
+.content-Box {
+  width: auto;
+  height: 100%;
+  padding: 30px 20px;
+  box-sizing: border-box;
+  margin: 0 20px;
+}
+.title-box {
+  padding: 0 15px;
+  i {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    margin-right: 10px;
+    background-color: #018adb;
+  }
+}
+.table {
+  width: 100%;
+  font-size: 14px;
+}
+.red {
+  color: #ff0000;
+}
+.handle-input {
+  width: 220px;
+  display: inline-block;
+}
+.setPoint-tip {
+  font-size: 12px;
+  color: #ccc;
+  display: flex;
+  justify-content: flex-end;
+}
+.setPoint-tip span:last-child {
+  margin-left: 20px;
+}
+.text-center {
+  text-align: center;
+}
+</style>

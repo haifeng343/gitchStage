@@ -1,0 +1,469 @@
+<template>
+  <div class="table">
+    <div class="container">
+      <div>
+        <el-form :inline="true" class="demo-form-inline">
+          <el-form-item label="从下属得到提点">
+            <el-input v-model="Branch_First" disabled></el-input>
+          </el-form-item>
+          <el-form-item label="从下下属得到提点" v-if="Level== 3">
+            <el-input v-model="Branch_Second" disabled></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="setPoit">设置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+      <div class="handle-box" style="float:right;">
+        <el-button type="primary" @click="openAddForm()">添加下属</el-button>
+        <el-button type="primary" @click="openSetDirectorForm()">变更主管</el-button>
+      </div>
+      <el-table :data="tableData" fixed border class="table" ref="multipleTable">
+        <el-table-column prop="AccountId" align="center" label="ID"></el-table-column>
+        <el-table-column prop="AccountName" align="center" label="销售姓名"></el-table-column>
+        <el-table-column prop="Phone" align="center" label="手机号"></el-table-column>
+        <el-table-column prop="IdCardNo" align="center" label="身份证号"></el-table-column>
+        <el-table-column align="center" label="职位">
+          <template slot-scope="scope">
+            <span>{{ scope.row.Level ==1?'销售':(scope.row.Level ==2?'销售主管':'大区经理') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="在职状态">
+          <template
+            slot-scope="scope"
+          >{{scope.row.PositionStatus == 1?'在职':(scope.row.PositionStatus == 2? '离职':'休假')}}</template>
+        </el-table-column>
+        <el-table-column prop="UpdateTime" align="center" label="更新时间"></el-table-column>
+        <el-table-column label="操作" width="250" align="center">
+          <template slot-scope="scope">
+            <el-button type="text" class="red" @click="deleteData(scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="pagination">
+        <el-pagination
+          background
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :page-sizes="[10, 20, 30, 40, 50]"
+          :page-size="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="TotalCount"
+        ></el-pagination>
+      </div>
+    </div>
+    <!-- 设置提点数框 -->
+    <el-dialog :title="`设置提点-${accountName}`" :visible.sync="setPonintVisible" width="500px">
+      <el-form
+        label-position="right"
+        style="padding-left:0"
+        label-width="160px"
+      >
+        <el-form-item label="分享下属提点：">
+          <el-input v-model="Branch_First"></el-input>
+        </el-form-item>
+        <el-form-item label="分享下下属提点：" v-if="Level== 3">
+          <el-input v-model="Branch_Second"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="BranchClick">确 定</el-button>
+        <el-button @click="setPonintVisible = false">取 消</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 添加下属弹出框 -->
+    <el-dialog :title="`添加下属-${accountName}`" :visible.sync="addFormVisible" width="663px" >
+      <div class="handle-box">
+        <label for>姓名:</label>
+        <el-input v-model="addFormAccountName" placeholder="请输入销售姓名" class="handle-input mr10"></el-input>
+        <label for>手机号:</label>
+        <el-input v-model="addFormAccountMobile" placeholder="请输入手机号" class="handle-input mr10"></el-input>
+        <el-button type="primary" icon="search" @click="addFormSearch()">搜索</el-button>
+      </div>
+      <el-table :data="AccountBranch" fixed border class="table" ref="multipleTable">
+        <el-table-column align="left" label="姓名">
+          <template slot-scope="scope">
+            <el-radio v-model="addFormRadio" :label="scope.row.AccountId">{{scope.row.AccountName}}</el-radio>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="职位">
+          <template slot-scope="scope">
+            <span>{{ scope.row.Level ==1?'销售':(scope.row.Level ==2?'销售主管':'大区经理') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="Phone" align="center" label="电话"></el-table-column>
+        <el-table-column prop="CreateTime" align="center" label="入职时间" width="180"></el-table-column>
+      </el-table>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" size="medium" @click="addFormOk()">确 定</el-button>
+        <el-button @click="addFormVisible = false" size="medium">关 闭</el-button>
+      </span>
+    </el-dialog>
+
+     <!-- 变更主管弹出框 -->
+    <el-dialog :title="`设置主管-${accountName}`" :visible.sync="setDirectorVisible" width="663px" max-height="300px">
+      <div style="margin-bottom:10px;">
+        <el-radio v-model="setDirectorFormRadio" label="1">暂无主管</el-radio>
+      </div>
+      <div style="margin-bottom:10px;">
+        <el-radio v-model="setDirectorFormRadio" label="2">变更主管</el-radio>
+      </div>
+      <div class="handle-box">
+        <label for>电销姓名:</label>
+        <el-input
+          :disabled="setDirectorFormRadio=='1'"
+          v-model="setDirectorFormTableAccountName"
+          placeholder="请输入电销姓名"
+          class="handle-input mr10"
+        ></el-input>
+        <label for>手机号:</label>
+        <el-input
+          :disabled="setDirectorFormRadio=='1'"
+          v-model="setDirectorFormTableAccountMobile"
+          placeholder="请输入手机号"
+          class="handle-input mr10"
+        ></el-input>
+        <el-button
+          :disabled="setDirectorFormRadio=='1'"
+          type="primary"
+          icon="search"
+          @click="setDirectorFormTableSearch()"
+        >搜索</el-button>
+      </div>
+      <el-table :data="setDirectorFormTableData" fixed border ref="multipleTable" max-height="300px">
+        <el-table-column align="left" label="姓名">
+          <template slot-scope="scope">
+            <el-radio
+              :disabled="setDirectorFormRadio=='1'"
+              v-model="setDirectorFormTableRadio"
+              :label="scope.row.AccountId"
+            >{{scope.row.AccountName}}</el-radio>
+          </template>
+        </el-table-column>
+        <el-table-column prop="Phone" align="center" label="电话"></el-table-column>
+        <el-table-column prop="SubordinateCount" align="center" label="职位">
+          <template slot-scope="scope">
+            {{scope.row.Level == 1 ? '销售' : (scope.row.Level == 2 ? '销售主管' : '大区经理')}}
+          </template>
+        </el-table-column>
+        <el-table-column prop="CreateTime" align="center" label="入职时间"></el-table-column>
+      </el-table>
+      <div style="margin-top:10px;">
+        <label for>原主管:</label>
+        <span>{{accountName}}</span>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" size="medium" @click="setDirectorOk()">确 定</el-button>
+        <el-button @click="setDirectorVisible = false" size="medium" >关 闭</el-button>
+      </span>
+    </el-dialog>
+    
+    <!--删除弹窗-->
+    <el-dialog title="删除下属信息" center :visible.sync="deleteVisible" width="400px">
+      <p class="text-center delete-textlog">您确定要将 {{ delName }} 从下属列表中删除吗?</p>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="deleteVisible = false">取 消</el-button>
+        <el-button type="primary" @click="deletesure">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { sellerBranchRoyaltySet, sellerAccountBranchList, sellerAccountBranchAdd, sellerAccountBranchDelete, sellerAccountBranch, sellerAccountBranchDirectorModify, sellerAccountSuperior, sellerAccountDetails } from 'api/manager.js';
+
+export default {
+  name: "DelegateSubordinate",
+  data() {
+    return {
+      accountId: 0,
+      Level:'',
+      accountName: "",
+      Branch_First:"",
+      Branch_Second:"",
+      tableData: [], //列表数据
+      cur_page: 1, //页码
+      pageSize: 10, //每页数量
+      TotalCount: 0, //总条数
+
+      setDirectorVisible:false,//变更主管弹窗
+      addFormVisible: false,
+      setPonintVisible: false,
+      deleteVisible:false,
+      isShow: false,
+      addFormAccountName: "",
+      addFormAccountMobile: "",
+      addFormRadio: "",
+
+      setDirectorFormRadio: "2",
+      setDirectorFormTableRadio: "",
+      setDirectorFormTableAccountMobile: "",
+      setDirectorFormTableAccountName: "",
+      setDirectorFormTableData: [],
+      delName: '',
+      deleId:'',
+
+      AccountBranch:[],
+
+    };
+  },
+  watch: {
+    $route(newValue, oldValue) {
+      if (newValue.path.indexOf("/sell_Subordinate") != -1) {
+        console.log(newValue.path)
+        this.init();
+      }
+    }
+  },
+  created() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.accountId = this.$route.params.id;
+      this._sellerAccountBranchList();
+      this._sellerAccountDetails(this.accountId);
+    },
+    //弹出设置提点数框
+    setPoit() {
+      this.setPonintVisible = true;
+    },
+    //设置提点数
+    BranchClick() {
+      this._sellerBranchRoyaltySet().then( res => {
+      this.setPonintVisible = false;
+        this.$message({
+          message:'设置成功',
+          type:'success',
+          showClose:true,
+        })
+      });
+    },
+    _sellerBranchRoyaltySet() {
+      const params = {
+        Id :  this.accountId,
+        Branch_First : this.Branch_First,
+        Branch_Second : this.Branch_Second
+      }
+      return sellerBranchRoyaltySet(params);
+    },
+    //重置弹出窗口
+    resetForm(formName) {
+      if (this.$refs[formName] != undefined) {
+        this.$refs[formName].resetFields();
+      }
+    },
+    //查询销售人员详情
+    _sellerAccountDetails(id) {
+      const params = {
+        Id: id
+      };
+      return sellerAccountDetails(params).then(res=>{
+        this.Level=res.Data.Level;
+        this.accountName=res.Data.AccountName;
+        this.Branch_First=res.Data.Branch_First;
+        this.Branch_Second=res.Data.Branch_Second;
+      });
+    },
+    //分页导航尺寸更改
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this._sellerAccountBranchList();
+    },
+    // 分页导航
+    handleCurrentChange(val) {
+      this.cur_page = val;
+      this._sellerAccountBranchList();
+    },
+    //删除数据
+    deleteData(item) {
+      this.delName = item.AccountName;
+      this.deleId=item.AccountId;
+      this.deleteVisible = true;
+    },
+    deletesure() {
+      this.deleteVisible = false;
+      this._sellerAccountBranchDelete(this.deleId).then(val => {
+          this._sellerAccountBranchList();
+          this.$message({
+            showClose: true,
+            message: "删除成功",
+            type: "success"
+          });
+        });
+    },
+    //打开添加下属弹出框
+    openAddForm() {
+      this.addFormVisible = true;
+      this.addFormRadio = "";
+      this.addFormAccountName = "";
+      this.addFormAccountMobile = "";
+      this._sellerAccountBranch();
+    },
+    //添加下属弹窗搜索
+    addFormSearch() {
+      this._sellerAccountBranch();
+    },
+    //添加下属列表
+    _sellerAccountBranch() {
+      const params = {
+        Name : this.addFormAccountName,
+        Phone : this.addFormAccountMobile,
+        Id : this.accountId
+      }
+      return sellerAccountBranch(params).then( res => {
+        this.AccountBranch = res.Data;
+      })
+    },
+    //添加下属确认
+    addFormOk() {
+      if (this.addFormRadio == "") {
+        this.$message.error("请选择一个下属人员");
+        return;
+      }
+      this._sellerAccountBranchAdd().then(val => {
+        this.addFormVisible = false;
+        this._sellerAccountBranchList();
+      });
+    },
+    //打开批量变更主管弹窗
+    openSetDirectorForm() {
+      this.setDirectorFormRadio = "2";
+      this.setDirectorFormTableRadio = "";
+      this.setDirectorVisible = true;
+      this.isShow = false;
+      this._getCallCenterAccountDirectorList();
+    },
+    //设置主管弹窗主管查询
+    setDirectorFormTableSearch() {
+      this._getCallCenterAccountDirectorList();
+    },
+    //查询销售人员主管列表
+    _getCallCenterAccountDirectorList() {
+      const params = {
+        Name: this.setDirectorFormTableAccountName,
+        Phone: this.setDirectorFormTableAccountMobile,
+        Id: this.accountId,
+        Type : 1
+      };
+      return sellerAccountSuperior(params).then(res => {
+        if (res.Data && res.Data.length > 0) {
+          this.setDirectorFormTableData = [...res.Data];
+        } else {
+          this.setDirectorFormTableData = [];
+        }
+      });
+    },
+    //设置主管确定
+    setDirectorOk() {
+      if (this.setDirectorFormRadio == "2") {
+        if (this.setDirectorFormTableRadio == "") {
+          this.$message.error("请选择一个主管");
+          return;
+        }
+      } else {
+        this.setDirectorFormTableRadio = 0;
+      }
+      this._sellerAccountBranchDirectorModify().then(val => {
+        this.setDirectorVisible = false;
+        this._sellerAccountBranchList();
+        this.$message({
+          showClose: true,
+          message: "变更主管成功",
+          type: "success"
+        });
+      });
+    },
+    //删除销售人员下属
+    _sellerAccountBranchDelete(Id) {
+      const params = {
+        AccountId: this.accountId,
+        BranchId : Id
+      };
+      return sellerAccountBranchDelete(params);
+    },
+    //查询销售人员列表
+    _sellerAccountBranchList() {
+      const params = {
+        Id : this.accountId,
+        pageindex : this.cur_page,
+        pagecount : this.pageSize
+      };
+      return sellerAccountBranchList(params).then(res => {
+        this.tableData = res.Data.List;
+        this.TotalCount = res.Data.TotalCount;
+      });
+    },
+    //添加销售人员下属
+    _sellerAccountBranchAdd() {
+      const params = {
+        AccountId: this.accountId,
+        BranchId: this.addFormRadio
+      };
+      return sellerAccountBranchAdd(params);
+    },
+    //批量变更销售人员主管
+    _sellerAccountBranchDirectorModify() {
+      const params = {
+        DirectorId: this.accountId,
+        NewDirectorId: this.setDirectorFormTableRadio
+      };
+      return sellerAccountBranchDirectorModify(params);
+    }
+  }
+};
+</script>
+
+<style scoped lang="less">
+.content-Box {
+  width: auto;
+  height: 100%;
+  padding: 30px 20px;
+  box-sizing: border-box;
+  margin: 0 20px;
+}
+
+.handle-box {
+  margin-bottom: 20px;
+}
+.title-box {
+  padding: 0 15px;
+  i {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    margin-right: 10px;
+    background-color: #018adb;
+  }
+}
+.table {
+  width: 100%;
+  font-size: 14px;
+}
+.red {
+  color: #ff0000;
+}
+.handle-input {
+  width: 220px;
+  display: inline-block;
+}
+.setPoint-tip {
+  font-size: 12px;
+  color: #ccc;
+  display: flex;
+  justify-content: flex-end;
+}
+.setPoint-tip span:last-child {
+  margin-left: 20px;
+}
+.mt20 {
+  margin-top: 20px;
+}
+.text-center{
+  text-align: center;
+}
+.delete-textlog{
+  margin: 20px 0;
+}
+</style>

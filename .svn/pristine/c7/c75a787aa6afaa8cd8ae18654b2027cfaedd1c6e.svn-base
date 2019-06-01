@@ -1,0 +1,90 @@
+import fetch from 'common/js/request'
+// 获取家庭列表
+export function getFamilyList(params) {
+  return fetch('/api/agent/manager/userdata/family/base/list', 'post', params)
+}
+// 设置有效状态
+export function setFamilyStatus(params) {
+  return fetch('/api/agent/manager/userdata/family/status/set', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
+// 新增家庭基础信息
+export function addFamilyList(params) {
+  return fetch('/api/agent/manager/userdata/family/base/add', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+// 获取家庭详细信息
+export function getFamilyDetail(params) {
+  return fetch('/api/agent/manager/userdata/family/details', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+// 修改家庭详细信息
+export function editFamilyList(params) {
+  return fetch('/api/agent/manager/userdata/family/modify', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+// 添加家庭地址
+export function addAddressInfo(params) {
+  return fetch('/api/agent/manager/userdata/family/address/add', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
+// 删除家庭地址
+export function editAddressInfo(params) {
+  return fetch('/api/agent/manager/userdata/family/address/modify', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+// 删除家庭地址
+export function deleteAddressInfo(params) {
+  return fetch('/api/agent/manager/userdata/family/address/delete', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
+// 添加家庭孩子
+export function addChildrenInfo(params) {
+  return fetch('/api/agent/manager/userdata/family/child/add', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+// 删除家庭孩子
+export function deleteChildInfo(params) {
+  return fetch('/api/agent/manager/userdata/family/child/status/set', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
+// 编辑家庭孩子
+export function editChildInfo(params) {
+  return fetch('/api/agent/manager/userdata/family/child/modify', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+// 获取孩子信息
+export function getChildrenList(params) {
+  return fetch('/api/agent/manager/userdata/children/list', 'post', params)
+}
+
+// 获取年龄统计
+export function getAgeStatistic(params) {
+  return fetch('/api/agent/manager/userdata/age/statistic', 'post', params)
+}
+
+// 获取性别统计
+export function getSexStatistic(params) {
+  return fetch('/api/agent/manager/userdata/sex/statistic', 'post', params)
+}
+
+// 获取地区统计
+export function getAreaStatistic(params) {
+  return fetch('/api/agent/manager/userdata/area/statistic', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
