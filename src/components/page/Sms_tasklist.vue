@@ -6,7 +6,7 @@
           <el-input v-model="formInline.name"></el-input>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="sendStatus" placeholder="请输入审核状态">
+          <el-select v-model="sendStatus" placeholder="请输入状态">
             <el-option
               v-for="item in  sendStatusList"
               :label="item.label"
@@ -21,7 +21,7 @@
         <el-button type="primary" @click="add" style="float:right">创建任务</el-button>
       </el-form>
 
-      <el-table v-loading="loading" :data="List" border class="table" ref="multipleTable">
+      <el-table :data="List" border class="table" ref="multipleTable">
         <el-table-column prop="FamilyId" align="center" label="ID"></el-table-column>
         <el-table-column prop="FamilyId" align="center" label="任务名称"></el-table-column>
         <el-table-column prop="FamilyId" align="center" label="模板名称"></el-table-column>
@@ -80,7 +80,7 @@
           <p class="sendTitle">发送选项</p>
           <el-form-item label="年龄：" prop="age">
             <label class="ageLabel">从</label>
-            <el-select v-model="age1" style="width:150px">
+            <el-select v-model="addForm.age" style="width:150px">
               <el-option
                 v-for="item in ageList"
                 :key="item.Id"
@@ -89,7 +89,7 @@
               ></el-option>
             </el-select>
             <label class="ageLabel">到</label>
-            <el-select v-model="age2" style="width:150px">
+            <el-select v-model="addForm.age" style="width:150px">
               <el-option
                 v-for="item in ageList"
                 :key="item.Id"
@@ -99,7 +99,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="性别：" prop="sex">
-            <el-select v-model="sexId" style="width:360px">
+            <el-select v-model="addForm.sex" style="width:360px">
               <el-option
                 v-for="item in sexList"
                 :key="item.Id"
@@ -125,10 +125,10 @@
           <el-checkbox v-model="addr" class="addrPotion"></el-checkbox>
           <el-form-item label="地址：" prop="address">
             <el-input v-model="addForm.address" :disabled="addr==false" style="width:276px"></el-input>
-            <el-button plain :disabled="addr==false">选择地址</el-button>
+            <el-button plain :disabled="addr==false" @click="slectAddress">选择地址</el-button>
           </el-form-item>
           <el-form-item label="半径范围：" prop="radius">
-            <el-select v-model="sexId" :disabled="addr==false" style="width:360px">
+            <el-select v-model="radiusId" :disabled="addr==false" style="width:360px">
               <el-option
                 v-for="item in radiusList"
                 :key="item.Id"
@@ -187,20 +187,39 @@
           <el-button type="primary" @click="addSure('addForm')">确 定</el-button>
         </span>
       </el-dialog>
+
+       <!--百度地图弹窗-->
+          <el-dialog
+            title="请在地图选点"
+            :visible.sync="dialogVisible"
+            width="50%"
+          >
+            <template>
+              <div id="allmap" ref="allmap"></div>
+              <div id="r-result">快速定位地址：<input type="text" id="suggestId" size="20" value="杭州" style="width: 808px;height: 25px;margin-top: 20px;"/></div>
+	            <div id="searchResultPanel" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
+            </template>
+            <span slot="footer" class="dialog-footer">
+              <el-button type="primary" @click="submit">确 定</el-button>
+            </span>
+          </el-dialog>
+
     </div>
   </div>
 </template>
 
 <script>
-import { smsTaskList } from "api/userdata.js";
+import { smsTaskList, ask, smsTaskAdd } from "api/userdata.js";
+import BMap from "BMap";
+import BMapSymbolSHAPEPOINT from "BMap_Symbol_SHAPE_POINT";
 export default {
   data() {
     return {
       List: [],
+      dialogVisible:false,
       pageCount: 0,
       pageSize: 30,
       currentPage: 1,
-      loading: false,
       addVisible: false,
       formInline: {
         name: ""
@@ -218,12 +237,12 @@ export default {
       optionId: "",
       age1: "",
       age2: "",
-      sexId: "",
       value1: "",
       defaultProps: {
         children: "Children",
         label: "Name"
       },
+      radiusId:'',
       checked: "",
       radio0: "",
       radio: "",
@@ -266,6 +285,8 @@ export default {
         smsLink: "",
         smsContent: "",
         area: "",
+        age:[],
+        sex:'',
         address: "",
         radius: "",
         checked: ["上海"],
@@ -275,7 +296,14 @@ export default {
         name: [{ required: true, message: "请输入模板名称", trigger: "blur" }],
         smsTemplate: [
           { required: true, message: "请选择短信模板", trigger: "change" }
-        ]
+        ],
+        // age:[
+        //   { required: true, message: "请选择年龄", trigger: "change" }
+        // ],
+        sex:[
+          { required: true, message: "请选择性别", trigger: "change" }
+        ],
+        area:[{ required: true, message: "请选择发送地区", trigger: "blur" }],
       }
     };
   },
@@ -300,14 +328,214 @@ export default {
     //分页导航尺寸更改
     handleSizeChange(val) {
       this.pageSize = val;
-      this.loading = true;
       this._smsTaskList();
     },
     // 分页导航
     handleCurrentChange(val) {
       this.currentPage = val;
-      this.loading = true;
       this._smsTaskList();
+    },
+    send(item) {
+      this.$router.push(`/SendLog/${item.FamilyId}`)
+    },
+    access(item) {
+      this.$router.push(`/AccessDetails/${item.FamilyId}`)
+    },
+    //创建
+    // _smsTaskAdd() {
+    //   const parmas = {
+    //     OrderName : this.addForm.name,
+
+    //   }
+    // },
+    mapInit() {
+      this.map = new BMap.Map(this.$refs.allmap); // 创建Map实例
+      this.map.centerAndZoom(new BMap.Point(114.3, 30.6), 11); // 初始化地图,设置中心点坐标（经纬度/城市的名称）和地图级别
+      this.map.addControl(
+        new BMap.MapTypeControl({
+          //添加地图类型控件
+          mapTypes: [BMAP_NORMAL_MAP, BMAP_HYBRID_MAP]
+        })
+      );
+      this.map.setCurrentCity("杭州"); // 设置地图显示的城市 此项是必须设置的
+      this.map.enableScrollWheelZoom(true); //开启鼠标滚轮缩放
+      //           map.setMapStyle({style:'midnight'});//地图风格
+      this.mapInput();
+    },
+    mapInput() {
+      const _this = this;
+      var ac = new BMap.Autocomplete(    //建立一个自动完成的对象
+        {"input" : "suggestId"
+        ,"location" : _this.map
+      });
+
+      ac.addEventListener("onhighlight", function(e) {  //鼠标放在下拉列表上的事件
+        var str = "";
+        var _value = e.fromitem.value;
+        var value = "";
+        if (e.fromitem.index > -1) {
+          value = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+        }    
+        str = "FromItem<br />index = " + e.fromitem.index + "<br />value = " + value;
+        
+        value = "";
+        if (e.toitem.index > -1) {
+          _value = e.toitem.value;
+          value = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+        }    
+        str += "<br />ToItem<br />index = " + e.toitem.index + "<br />value = " + value;
+        G("searchResultPanel").innerHTML = str;
+      });
+
+      var myValue;
+      ac.addEventListener("onconfirm", function(e) {    //鼠标点击下拉列表后的事件
+      var _value = e.item.value;
+        myValue = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+        G("searchResultPanel").innerHTML ="onconfirm<br />index = " + e.item.index + "<br />myValue = " + myValue;
+        
+        setPlace();
+      });
+
+      function setPlace(){
+        _this.map.clearOverlays();    //清除地图上所有覆盖物
+        function myFun(){
+          var pp = local.getResults().getPoi(0).point;    //获取第一个智能搜索的结果
+          _this.map.centerAndZoom(pp, 11);
+          _this.addPoint(pp);
+        }
+        var local = new BMap.LocalSearch(_this.map, { //智能搜索
+          onSearchComplete: myFun
+        });
+        local.search(myValue);
+      }
+
+      function G(id) {
+        return document.getElementById(id);
+      }
+    },
+    upload() {},
+    slectAddress() {
+      this.dialogVisible = true;
+
+      setTimeout(() => {
+        this.mapInit();
+        if (this.ruleForm.City) {
+          let address = this.ruleForm.Address;
+
+          this.map.centerAndZoom(this.ruleForm.City, 11);
+          if (this.ruleForm.Latitude) {
+            const point = new BMap.Point(
+              this.ruleForm.Longitude,
+              this.ruleForm.Latitude
+            );
+            this.addPoint(point);
+          } else {
+            this.getAddressLoc(
+              address || this.ruleForm.City,
+              this.ruleForm.City
+            )
+              .then(point => {
+                this.addPoint(point);
+              })
+              .catch(() => {
+                this.getAddressLoc(this.ruleForm.City, this.ruleForm.City).then(
+                  point => {
+                    this.addPoint(point);
+                  }
+                );
+              });
+          }
+        } else {
+          this.getLocationByIp().then(result => {
+            this.map.centerAndZoom(result.city, 11);
+            this.addPoint(result.point);
+          });
+        }
+      }, 10);
+    },
+    addPoint(point) {
+      const _this = this;
+      if (this.marker) {
+        this.map.removeOverlay(this.marker); // 将标注添加到地图中
+      }
+      this.marker = new BMap.Marker(point); // 创建标注
+      this.marker.enableDragging();
+      this.map.addOverlay(this.marker); // 将标注添加到地图中
+      this.marker.addEventListener("dragend", function(e) {
+        _this.getAddressName();
+      });
+
+    },
+    getAddressLoc(address, city) {
+      return new Promise((resolve, reject) => {
+        // 创建地址解析器实例
+        const myGeo = new BMap.Geocoder();
+        // 将地址解析结果显示在地图上,并调整地图视野
+        myGeo.getPoint(
+          address,
+          function(point) {
+            if (point) {
+              resolve(point);
+            } else {
+              reject();
+            }
+          },
+          city
+        );
+      });
+    },
+    getLocationByIp() {
+      return new Promise((resolve, reject) => {
+        const geolocation = new BMap.Geolocation();
+        geolocation.getCurrentPosition(
+          function(r) {
+            if (this.getStatus() == BMAP_STATUS_SUCCESS) {
+              // 根据浏览器IP获取位置 成功
+              resolve({
+                city: r.address.city,
+                point: r.point
+              });
+            } else {
+              // 根据浏览器IP获取位置 失败时定位到杭州市中心
+              resolve({
+                city: "杭州",
+                point: new BMap.Point(120.175266, 30.274044)
+              });
+            }
+          },
+          { enableHighAccuracy: true }
+        );
+      });
+    },
+    getAddressName(a) {
+      return new Promise((resolve, reject) => {
+        const point = this.marker.point;
+        const pars = {
+          location: point.lat + "," + point.lng
+        };
+        ask(pars).then(res => {
+          console.log(res)
+          resolve({
+            Longitude: res.Longitude,
+            Latitude: res.Latitude,
+            Address: res.Address,
+            AddressDetails: res.AddressDetails,
+            Province: res.Province,
+            City: res.City,
+            Area: res.Area
+          });
+          if (!a) {
+            document.getElementById('suggestId').value = res.AddressDetails;
+          }
+        });
+      });
+    },
+    //地图确定
+    submit() {
+      this.getAddressName(1).then(result => {
+        this.dialogVisible = false;
+        this.ruleForm = Object.assign({},this.ruleForm, result);
+      })
     },
     search() {
       this._smsTaskList();
@@ -390,5 +618,10 @@ export default {
   position: relative;
   right: -60px;
   bottom: -24px;
+}
+</style>
+<style>
+.tangram-suggestion-main {
+  z-index: 999999;
 }
 </style>

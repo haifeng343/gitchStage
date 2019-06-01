@@ -692,6 +692,24 @@ export default new Router({
                     meta: { title: '短信管理-任务列表', permission: true }
                 },
                 {
+                    // 访问详情-任务名称
+                    path: '/AccessDetails/:id',
+                    component: resolve => require(['../components/page/AccessDetails.vue'], resolve),
+                    meta: { title: '访问详情-任务名称', permission: true }
+                },
+                {
+                    // 记录详情-ID
+                    path: '/RecordLog/:id',
+                    component: resolve => require(['../components/page/RecordLog.vue'], resolve),
+                    meta: { title: '记录详情-ID', permission: true }
+                },
+                {
+                    // 发送记录-任务名称
+                    path: '/SendLog/:id',
+                    component: resolve => require(['../components/page/SendLog.vue'], resolve),
+                    meta: { title: '发送记录-任务名称', permission: true }
+                },
+                {
                     path: '/404',
                     component: resolve => require(['../components/page/404.vue'], resolve),
                     meta: { title: '404' }

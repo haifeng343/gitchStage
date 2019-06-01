@@ -219,3 +219,17 @@ export function smsTaskList(params) {
     return Promise.resolve(res)
   })
 }
+
+// 创建短信任务
+export function smsTaskAdd(params) {
+  return fetch('/api/agent/manager/userdata/sms/task/add', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
+//百度地圖
+export function ask(params) {
+  return fetch('/api/user/geocoder', 'get', params).then(res => {
+    return Promise.resolve(res)
+  })
+}

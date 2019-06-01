@@ -3,15 +3,11 @@
     <div class="content-Box" style="margin-top:10px">
       <el-form :inline="true" :model="formInline" class="demo-form-inline">
         <el-form-item label="模板名称">
-          <el-select v-model="formInline.region" placeholder="请输入模板名称">
-            <el-option label="区域一" value="shanghai"></el-option>
-            <el-option label="区域二" value="beijing"></el-option>
-          </el-select>
+          <el-input v-model="formInline.name"></el-input>
         </el-form-item>
         <el-form-item label="审核状态">
-          <el-select v-model="formInline.region" placeholder="请输入审核状态">
-            <el-option label="区域一" value="shanghai"></el-option>
-            <el-option label="区域二" value="beijing"></el-option>
+          <el-select v-model="formInline.Status" placeholder="请输入审核状态">
+            <el-option v-for="item in statusList" :key="item.Id" :label="item.name" :value="item.Id"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -21,17 +17,29 @@
       </el-form>
 
       <el-table v-loading="loading" :data="List" border class="table" ref="multipleTable">
-        <el-table-column prop="FamilyId" align="center" label="ID"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="模板名称"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="签名"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="短信内容"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="状态"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="状态描述"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="第三方状态"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="第三方模板ID"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="申请时间"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="完成时间"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="是否有效"></el-table-column>
+        <el-table-column prop="TemplateSysId" align="center" label="ID"></el-table-column>
+        <el-table-column prop="TemplateName" align="center" label="模板名称"></el-table-column>
+        <el-table-column prop="SignId" align="center" label="签名"></el-table-column>
+        <el-table-column prop="SmsContent" align="center" label="短信内容"></el-table-column>
+        <el-table-column align="center" label="状态">
+          <template slot-scope="scope">
+            {{scope.row.ExamineState | ExamineState}}
+          </template>
+        </el-table-column>
+        <el-table-column prop="ExamineFailReason" align="center" label="状态描述"></el-table-column>
+        <el-table-column align="center" label="第三方状态">
+          <template slot-scope="scope">
+            {{scope.row.ThirdStatus | ThirdStatus}}
+          </template>
+        </el-table-column>
+        <el-table-column prop="ThirdTemplateId" align="center" label="第三方模板ID"></el-table-column>
+        <el-table-column prop="CreateTime" align="center" label="申请时间"></el-table-column>
+        <el-table-column prop="UpdateTime" align="center" label="完成时间"></el-table-column>
+        <el-table-column prop="AccountIsDeleted" align="center" label="是否有效">
+          <template slot-scope="scope">
+            {{scope.row.AccountIsDeleted == false ?"有效":"无效"}}
+          </template>
+        </el-table-column>
         <el-table-column align="center" label="操作">
           <template slot-scope="scope">
             <el-button type="text" :class="{'grow':grow}">提交审核</el-button>
@@ -188,6 +196,7 @@
 
 <script>
 // import { getFamilyBaseSourceList, setFamilyStatusSourceSet, addFamilySourceList, setExportTmk, } from "api/userdata.js";
+import { getSContentTem } from 'api/seller.js';
 export default {
   data() {
     return {
@@ -208,6 +217,14 @@ export default {
         smsLink: "",
         smsContent: ""
       },
+      statusList:[
+        {Id:0,name:"全部"},
+        {Id:1,name:"等待审核"},
+        {Id:2,name:"正在审核"},
+        {Id:3,name:"审核拒绝"},
+        {Id:4,name:"审核通过"},
+        {Id:5,name:"管理员作废"},
+      ],
       addrules: {
         name: [{ required: true, message: "请输入模板名称", trigger: "blur" }],
         signature: [
@@ -248,20 +265,67 @@ export default {
       },
     };
   },
+  mounted() {
+    this._getSContentTem();
+  },
+  filters: {
+    ExamineState(parmas){
+      switch(parmas){
+        case 1:
+          return "待审核"
+        case 2:
+          return "审核中"
+        case 3:
+          return "审核拒绝"
+        case 4:
+          return "审核通过"
+        case 5:
+          return "管理员作废"
+      }
+    },
+    ThirdStatus(parmas){
+      switch(parmas){
+        case 0:
+          return "审核中"
+        case 1:
+          return "审核成功"
+        case 2:
+          return "审核失败"
+      }
+    },
+  },
   methods: {
+    //获取列表
+    _getSContentTem() {
+      const parmas = {
+        SellerName : '',
+        SellerPhone : '',
+        Content:this.formInline.name,
+        Status:this.formInline.Status,
+        Type : 2,
+        pageindex:this.currentPage,
+        pagecount:this.pageSize
+      }
+      getSContentTem(parmas).then( res => {
+        this.List = res.Data.List;
+        this.pageCount = res.Data.TotalCount
+        console.log(res);
+      })
+    },
     //分页导航尺寸更改
     handleSizeChange(val) {
-      //   this.pagesize = val;
-      //   this.loading = true;
-      //   this.getData();
+        this.pageSize = val;
+        this._getSContentTem();
     },
     // 分页导航
     handleCurrentChange(val) {
-      //   this.cur_page = val;
-      //   this.loading = true;
-      //   this.getData();
+        this.currentPage = val;
+        this._getSContentTem();
     },
-    search() {},
+    search() {
+      this.currentPage = 1;
+      this._getSContentTem();
+    },
     add() {
       this.addVisible = true;
     },
