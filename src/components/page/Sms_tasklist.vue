@@ -266,7 +266,22 @@ export default {
         { Id: 3, label: "2" },
         { Id: 4, label: "3" },
         { Id: 5, label: "4" },
-        { Id: 6, label: "5" }
+        { Id: 6, label: "5" },
+        { Id: 7, label: "6" },
+        { Id: 8, label: "7" },
+        { Id: 9, label: "8" },
+        { Id: 10, label: "9" },
+        { Id: 11, label: "10" },
+        { Id: 12, label: "11" },
+        { Id: 13, label: "12" },
+        { Id: 14, label: "13" },
+        { Id: 15, label: "14" },
+        { Id: 16, label: "15" },
+        { Id: 17, label: "16" },
+        { Id: 18, label: "17" },
+        { Id: 19, label: "18" },
+        { Id: 20, label: "19" },
+        { Id: 21, label: "20" },
       ],
       radiusList: [
         { Id: 1, label: "0" },
@@ -303,7 +318,7 @@ export default {
         sex:[
           { required: true, message: "请选择性别", trigger: "change" }
         ],
-        area:[{ required: true, message: "请选择发送地区", trigger: "blur" }],
+        // area:[{ required: true, message: "请选择发送地区", trigger: "blur" }],
       }
     };
   },
@@ -342,12 +357,32 @@ export default {
       this.$router.push(`/AccessDetails/${item.FamilyId}`)
     },
     //创建
-    // _smsTaskAdd() {
-    //   const parmas = {
-    //     OrderName : this.addForm.name,
+    _smsTaskAdd() {
+      const parmas = {
+        OrderName : this.addForm.name,
+        TemplateId : 3,
+        Logitude:0,
+        Latitude:0,
+        Address:this.addForm.address,
+        SendType:1,
+        SendTime :'',
+        SendRate:this.day,
+        SendRounds:this.count,
+        SendCount:this.addForm.number,
+        IsLoop:this.checked,
+        ContentList:'',
+        TagList:this.checkList
+      }
+      smsTaskAdd(parmas).then( res => {
+        this.addVisible = false;
+        this.$message({
+          message:'添加成功',
+          showClose:true,
+          type:'success'
+        });
 
-    //   }
-    // },
+      })
+    },
     mapInit() {
       this.map = new BMap.Map(this.$refs.allmap); // 创建Map实例
       this.map.centerAndZoom(new BMap.Point(114.3, 30.6), 11); // 初始化地图,设置中心点坐标（经纬度/城市的名称）和地图级别
@@ -550,7 +585,8 @@ export default {
     addSure(formName) {
       this.$refs[formName].validate(valid => {
         if (valid) {
-          alert("submit!");
+          // alert("submit!");
+          this._smsTaskAdd();
         } else {
           console.log("error submit!!");
           return false;

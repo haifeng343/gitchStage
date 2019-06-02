@@ -42,7 +42,7 @@
         </el-table-column>
         <el-table-column align="center" label="操作">
           <template slot-scope="scope">
-            <el-button type="text" :class="{'grow':grow}">提交审核</el-button>
+            <el-button type="primary" :class="{'grow':grow}">提交审核</el-button>
             <el-button class="red" type="text">删除</el-button>
           </template>
         </el-table-column>
