@@ -70,9 +70,9 @@
             <el-select v-model="addForm.smsTemplate" style="width:360px">
               <el-option
                 v-for="item in selectList"
-                :key="item.Id"
-                :label="item.label"
-                :value="item.Id"
+                :key="item.TemplateSysId"
+                :label="item.TemplateName"
+                :value="item.TemplateSysId"
               ></el-option>
             </el-select>
           </el-form-item>
@@ -209,6 +209,7 @@
 </template>
 
 <script>
+import { getSContentTem } from 'api/seller.js';
 import { smsTaskList, ask, smsTaskAdd } from "api/userdata.js";
 import BMap from "BMap";
 import BMapSymbolSHAPEPOINT from "BMap_Symbol_SHAPE_POINT";
@@ -250,11 +251,7 @@ export default {
       day: "",
       count: "",
       value3: "",
-      selectList: [
-        { Id: 1, label: "全部" },
-        { Id: 2, label: "一部分" },
-        { Id: 3, label: "小部分" }
-      ],
+      selectList:[],
       sexList: [
         { Id: 1, label: "全部" },
         { Id: 2, label: "男" },
@@ -323,9 +320,26 @@ export default {
     };
   },
   mounted() {
+    this. _getSContentTem();
     this._smsTaskList();
   },
   methods: {
+    //获取短信模板列表
+    _getSContentTem() {
+      const parmas = {
+        SellerName : '',
+        SellerPhone : '',
+        Content:this.formInline.name,
+        Status:4,
+        Type : 2,
+        pageindex:this.currentPage,
+        pagecount:this.pageSize
+      }
+      getSContentTem(parmas).then( res => {
+        this.selectList = res.Data.List;
+        console.log(this.selectList);
+      })
+    },
     //获取任务列表
     _smsTaskList() {
       const parmas = {
