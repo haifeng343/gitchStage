@@ -78,9 +78,9 @@
           </el-form-item>
           <div class="liner"></div>
           <p class="sendTitle">发送选项</p>
-          <el-form-item label="年龄：" prop="age">
+          <el-form-item label="年龄：">
             <label class="ageLabel">从</label>
-            <el-select v-model="addForm.age" style="width:150px">
+            <el-select v-model="addForm.age[0]" style="width:150px">
               <el-option
                 v-for="item in ageList"
                 :key="item.Id"
@@ -89,7 +89,7 @@
               ></el-option>
             </el-select>
             <label class="ageLabel">到</label>
-            <el-select v-model="addForm.age" style="width:150px">
+            <el-select v-model="addForm.age[1]" style="width:150px">
               <el-option
                 v-for="item in ageList"
                 :key="item.Id"
@@ -149,21 +149,20 @@
           <el-radio v-model="radio0" label="0">单次发送</el-radio>
           <br>
           <el-radio
-            v-model="radio"
-            :disabled="radio0 ==1"
+            v-model="SendType"
+            :disabled="radio0 ==3"
             label="1"
             style="margin:20px 0;margin-left:20px;"
           >即刻发送</el-radio>
-          <el-radio v-model="radio" :disabled="radio0 ==1" label="2">定时发送</el-radio>
+          <el-radio v-model="SendType" :disabled="radio0 ==3" label="2">定时发送</el-radio>
           <el-date-picker
             v-model="value2"
-            :disabled="radio0 ==1"
-            v-if="radio==2"
+            :disabled="SendType !=2"
             type="datetime"
             placeholder="选择日期时间"
           ></el-date-picker>
           <br>
-          <el-radio v-model="radio0" label="1" style="margin:10px 0 20px 0">
+          <el-radio v-model="radio0" label="3" style="margin:10px 0 20px 0">
             每
             <el-input :disabled="radio0==0" v-model="day" style="width:60px"></el-input>日,总共发送
             <el-input :disabled="radio0==0" v-model="count" style="width:60px"></el-input>次
@@ -178,7 +177,7 @@
             placeholder="任意时间点"
           ></el-time-picker>
           <el-form-item label="单次发送数量：" prop="number" style="margin-top:20px;margin-left:-50px">
-            <el-input v-model="addForm.number"></el-input>
+            <el-input v-model="addForm.number" :disabled="radio0==0"></el-input>
           </el-form-item>
           <el-checkbox v-model="checked">是否循环</el-checkbox>
         </el-form>
@@ -195,7 +194,7 @@
             width="50%"
           >
             <template>
-              <div id="allmap" ref="allmap"></div>
+              <div id="allmap" ref="allmap" style="height: 500px;"></div>
               <div id="r-result">快速定位地址：<input type="text" id="suggestId" size="20" value="杭州" style="width: 808px;height: 25px;margin-top: 20px;"/></div>
 	            <div id="searchResultPanel" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
             </template>
@@ -213,6 +212,7 @@ import { getSContentTem } from 'api/seller.js';
 import { smsTaskList, ask, smsTaskAdd } from "api/userdata.js";
 import BMap from "BMap";
 import BMapSymbolSHAPEPOINT from "BMap_Symbol_SHAPE_POINT";
+import { normalTime } from '../../common/js/filter';
 export default {
   data() {
     return {
@@ -236,8 +236,6 @@ export default {
         { Id: 5, label: "暂停发送" }
       ],
       optionId: "",
-      age1: "",
-      age2: "",
       value1: "",
       defaultProps: {
         children: "Children",
@@ -246,7 +244,7 @@ export default {
       radiusId:'',
       checked: "",
       radio0: "",
-      radio: "",
+      SendType: "",
       value2: "",
       day: "",
       count: "",
@@ -297,7 +295,7 @@ export default {
         smsLink: "",
         smsContent: "",
         area: "",
-        age:[],
+        age:[0,0],
         sex:'',
         address: "",
         radius: "",
@@ -309,14 +307,12 @@ export default {
         smsTemplate: [
           { required: true, message: "请选择短信模板", trigger: "change" }
         ],
-        // age:[
-        //   { required: true, message: "请选择年龄", trigger: "change" }
-        // ],
         sex:[
           { required: true, message: "请选择性别", trigger: "change" }
         ],
         // area:[{ required: true, message: "请选择发送地区", trigger: "blur" }],
-      }
+      },
+      ruleForm: {},
     };
   },
   mounted() {
@@ -337,7 +333,6 @@ export default {
       }
       getSContentTem(parmas).then( res => {
         this.selectList = res.Data.List;
-        console.log(this.selectList);
       })
     },
     //获取任务列表
@@ -350,7 +345,6 @@ export default {
       };
       smsTaskList(parmas).then(res => {
         this.List = res.Data.List;
-        console.log(res);
         this.pageCount = res.Data.TotalCount;
       });
     },
@@ -372,21 +366,44 @@ export default {
     },
     //创建
     _smsTaskAdd() {
-      const parmas = {
+      let st = "";
+      let time1 = "";
+      let obj = {};
+      if(this.radio0 ==0){
+        st = this.SendType;
+        if(this.SendType ==1){
+          time1 = normalTime(Date.now());
+        }
+        if(this.SendType ==2){
+          time1 = this.value2;
+        }
+        obj = {
+          SendRate: '',
+          SendCount: 0,
+          SendRounds: 0,
+        };
+      }else {
+        st = 3;
+        time1 = this.value3;
+        obj = {
+          SendRate: this.day,
+          SendCount: this.addForm.number,
+          SendRounds: this.count,
+        };
+      }
+      let parmas = {
         OrderName : this.addForm.name,
         TemplateId : 3,
-        Logitude:0,
-        Latitude:0,
+        Logitude:this.ruleForm.Longitude,
+        Latitude:this.ruleForm.Latitude,
         Address:this.addForm.address,
-        SendType:1,
-        SendTime :'',
-        SendRate:this.day,
-        SendRounds:this.count,
-        SendCount:this.addForm.number,
+        SendType:st,
+        SendTime :time1,
         IsLoop:this.checked,
         ContentList:'',
-        TagList:this.checkList
+        TagList:this.addForm.checked
       }
+      parmas = Object.assign({}, parmas, obj);
       smsTaskAdd(parmas).then( res => {
         this.addVisible = false;
         this.$message({
@@ -563,7 +580,7 @@ export default {
           location: point.lat + "," + point.lng
         };
         ask(pars).then(res => {
-          console.log(res)
+          res = res.Data;
           resolve({
             Longitude: res.Longitude,
             Latitude: res.Latitude,
@@ -584,6 +601,8 @@ export default {
       this.getAddressName(1).then(result => {
         this.dialogVisible = false;
         this.ruleForm = Object.assign({},this.ruleForm, result);
+        this.addForm.address = result.AddressDetails;
+        this.addForm = Object.assign({}, this.addForm);
       })
     },
     search() {
@@ -599,7 +618,19 @@ export default {
     addSure(formName) {
       this.$refs[formName].validate(valid => {
         if (valid) {
-          // alert("submit!");
+          if(this.addForm.age[0] <=0 || this.addForm.age[1] <=0){
+            this.$message({
+              message:"请选择年龄",
+              showClose:true,
+              type:'error'
+            })
+            return ;
+          }
+          if(this.radio0 ==0){
+            if(this.SendType ==1){
+
+            }
+          }
           this._smsTaskAdd();
         } else {
           console.log("error submit!!");

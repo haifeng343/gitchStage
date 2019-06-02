@@ -229,7 +229,7 @@ export function smsTaskAdd(params) {
 
 //百度地圖
 export function ask(params) {
-  return fetch('/api/user/geocoder', 'get', params).then(res => {
+  return fetch('/mock/user/geocoder', 'get', params).then(res => {
     return Promise.resolve(res)
   })
 }
