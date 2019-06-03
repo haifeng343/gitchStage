@@ -710,6 +710,12 @@ export default new Router({
                     meta: { title: '发送记录-任务名称', permission: true }
                 },
                 {
+                    // 委托管理-委托标签
+                    path: '/delegatetaglist',
+                    component: resolve => require(['../components/page/delegatetaglist.vue'], resolve),
+                    meta: { title: '委托标签', permission: true }
+                },
+                {
                     path: '/404',
                     component: resolve => require(['../components/page/404.vue'], resolve),
                     meta: { title: '404' }

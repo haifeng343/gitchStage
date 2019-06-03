@@ -3,13 +3,10 @@
     <div class="content-Box" style="margin-top:10px">
       <el-form :inline="true" :model="formInline" class="demo-form-inline">
         <el-form-item label="模板名称">
-          <el-select v-model="formInline.region" placeholder="请输入模板名称">
-            <el-option label="区域一" value="shanghai"></el-option>
-            <el-option label="区域二" value="beijing"></el-option>
-          </el-select>
+          <el-input v-model="formInline.temName" placeholder="请输入模板名称"></el-input>
         </el-form-item>
         <el-form-item label="父母姓名">
-          <el-input v-model="formInline.user" placeholder="请输入父母姓名"></el-input>
+          <el-input v-model="formInline.name" placeholder="请输入父母姓名"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="search">搜 索</el-button>
@@ -66,7 +63,7 @@
 </template>
 
 <script>
-// import { getFamilyBaseSourceList, setFamilyStatusSourceSet, addFamilySourceList, setExportTmk, } from "api/userdata.js";
+import { smsTaskSendRecord } from "api/userdata.js";
 export default {
   data() {
     return {
@@ -79,24 +76,56 @@ export default {
       contentVisible:false,
       formInline: {
         name: "",
-        region: ""
+        temName:''
       }
     };
   },
+  mounted() {
+    this._smsTaskSendRecord();
+  },
+  filters:{
+    Status(params){
+      switch(params){
+        case 0:
+          return "等待发送";
+        case 1:
+          return "正在发送";
+        case 2:
+          return "发送失败";
+        case 3:
+          return "发送成功";
+      }
+    }
+  },
   methods: {
+    _smsTaskSendRecord() {
+      const params = {
+        Parent : this.formInline.name,
+        OrderId : this.Id,
+        TemplateName : this.formInline.temName,
+        SourceId:0,
+        pageindex:this.currentPage,
+        pagecount:this.pageSize
+      }
+      smsTaskSendRecord(params).then( res => {
+        this.List = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      })
+    },
     //分页导航尺寸更改
     handleSizeChange(val) {
-      //   this.pagesize = val;
-      //   this.loading = true;
-      //   this.getData();
+        this.pageSize = val;
+        this._smsTaskSendRecord();
     },
     // 分页导航
     handleCurrentChange(val) {
-      //   this.cur_page = val;
-      //   this.loading = true;
-      //   this.getData();
+        this.currentPage = val;
+        this._smsTaskSendRecord();
     },
-    search() {}
+    search() {
+      this.currentPage = 1;
+      this._smsTaskSendRecord();
+    }
   }
 };
 </script>

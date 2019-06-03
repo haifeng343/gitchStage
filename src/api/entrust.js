@@ -642,8 +642,38 @@ export function delegateTrackTagtypePulldown(params) {
   })
 }
 
+//获取委托标签列表
+export function delegaTetagList(params) {
+  return fetch('/api/agent/manager/callcenter/delegate/tag/list', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
 
+//设置委托标签是否有效
+export function delegaTeTagStatusModify(params) {
+  return fetch('/api/agent/manager/callcenter/delegate/tag/status/modify', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
 
+//新增委托标签
+export function delegaTeTagAdd(params) {
+  return fetch('/api/agent/manager/callcenter/delegate/tag/add', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
 
+//编辑委托标签
+export function delegaTeTagModify(params) {
+  return fetch('/api/agent/manager/callcenter/delegate/tag/modify', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
 
+//删除委托标签
+export function delegaTeTagDelete(params) {
+  return fetch('/api/agent/manager/callcenter/delegate/tag/delete', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
 

@@ -3,21 +3,29 @@
     <div class="content-Box" style="margin-top:10px">
       <el-form :inline="true" :model="formInline" class="demo-form-inline">
         <el-form-item label="父母姓名">
-          <el-input v-model="name"></el-input>
+          <el-input v-model="formInline.name"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="search">搜 索</el-button>
         </el-form-item>
-        <el-button type="primary" @click="add" style="float:right">添加模板</el-button>
       </el-form>
 
       <el-table v-loading="loading" :data="List" border class="table" ref="multipleTable">
-        <el-table-column prop="FamilyId" align="center" label="父/母"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="手机号"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="小孩姓名"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="状态"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="发送时间"></el-table-column>
-        <el-table-column prop="FamilyId" align="center" label="完成时间"></el-table-column>
+        <el-table-column prop="Id" align="center" label="ID"></el-table-column>
+        <el-table-column prop="FamilyId" align="center" label="父/母">
+        <template slot-scope="scope">
+          {{scope.row.FatherName}}/{{scope.row.MotherName}}
+        </template>
+        </el-table-column>
+        <el-table-column prop="Mobile" align="center" label="手机号"></el-table-column>
+        <el-table-column prop="ChildName" align="center" label="小孩姓名"></el-table-column>
+        <el-table-column align="center" label="状态">
+          <template slot-scope="scope">
+            {{scope.row.Status | Status}}
+          </template>
+        </el-table-column>
+        <el-table-column prop="CreateTime" align="center" label="发送时间"></el-table-column>
+        <el-table-column prop="FinishTime" align="center" label="完成时间"></el-table-column>
       </el-table>
       <div class="pagination">
         <el-pagination
@@ -38,7 +46,7 @@
 </template>
 
 <script>
-// import { getFamilyBaseSourceList, setFamilyStatusSourceSet, addFamilySourceList, setExportTmk, } from "api/userdata.js";
+import { smsTaskSendRecord } from "api/userdata.js";
 export default {
   data() {
     return {
@@ -52,23 +60,57 @@ export default {
       formInline: {
         name: "",
       },
-     
+      Id:'',
     };
   },
+  mounted() {
+    this.Id = this.$route.params.id;
+    this._smsTaskSendRecord();
+  },
+  filters:{
+    Status(params){
+      switch(params){
+        case 0:
+          return "等待发送";
+        case 1:
+          return "正在发送";
+        case 2:
+          return "发送失败";
+        case 3:
+          return "发送成功";
+      }
+    }
+  },
   methods: {
+    _smsTaskSendRecord() {
+      const params = {
+        Parent : this.formInline.name,
+        OrderId : this.Id,
+        TemplateName : '',
+        SourceId:0,
+        pageindex:this.currentPage,
+        pagecount:this.pageSize
+      }
+      smsTaskSendRecord(params).then( res => {
+        this.List = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      })
+    },
+
     //分页导航尺寸更改
     handleSizeChange(val) {
-      //   this.pagesize = val;
-      //   this.loading = true;
-      //   this.getData();
+        this.pageSize = val;
+        this._smsTaskSendRecord();
     },
     // 分页导航
     handleCurrentChange(val) {
-      //   this.cur_page = val;
-      //   this.loading = true;
-      //   this.getData();
+        this.currentPage = val;
+        this._smsTaskSendRecord();
     },
-    search() {},
+    search() {
+      this.currentPage = 1;
+      this._smsTaskSendRecord();
+    },
 
   }
 };

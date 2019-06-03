@@ -227,6 +227,34 @@ export function smsTaskAdd(params) {
   })
 }
 
+// 获取短信任务详情
+export function smsTaskDetails(params) {
+  return fetch('/api/agent/manager/userdata/sms/task/details', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
+// 修改短信任务发送状态
+export function smsTaskStatusModify(params) {
+  return fetch('/api/agent/manager/userdata/sms/task/status/modify', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
+// 查询短信任务发送记录
+export function smsTaskSendRecord(params) {
+  return fetch('/api/agent/manager/userdata/sms/task/send/record', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
+// 删除短信任务
+export function smsTaskDelete(params) {
+  return fetch('/api/agent/manager/userdata/sms/task/delete', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
 //百度地圖
 export function ask(params) {
   return fetch('/mock/user/geocoder', 'get', params).then(res => {
