@@ -155,7 +155,7 @@ export default {
         TagId: item.Id,
         Status: item.Status
       };
-      return delegaTeTagStatusModify(params).catch(ex => {
+      return delegaTeTagStatusModify(params).then(ex => {
         this.$message({
           message: "修改成功",
           showClose: true,

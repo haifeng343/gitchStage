@@ -105,11 +105,11 @@
           label-width="140px"
           class="demo-ruleForm"
         >
-          <el-form-item label="任务名称：" prop="name">
-            <el-input v-model="addForm.name"></el-input>
+          <el-form-item label="任务名称：" prop="OrderName">
+            <el-input v-model="addForm.OrderName"></el-input>
           </el-form-item>
-          <el-form-item label="选择短信模板：" prop="smsTemplate">
-            <el-select v-model="addForm.smsTemplate" style="width:360px">
+          <el-form-item label="选择短信模板：" prop="TemplateId">
+            <el-select v-model="addForm.TemplateId" style="width:360px">
               <el-option
                 v-for="item in selectList"
                 :key="item.TemplateSysId"
@@ -155,8 +155,8 @@
             </div>
           </el-form-item>
           <el-checkbox v-model="addr" class="addrPotion"></el-checkbox>
-          <el-form-item label="地址：" prop="address">
-            <el-input v-model="addForm.address" disabled style="width:276px"></el-input>
+          <el-form-item label="地址：" prop="Address">
+            <el-input v-model="addForm.Address" disabled style="width:276px"></el-input>
             <el-button plain :disabled="addr==false" @click="slectAddress">选择地址</el-button>
           </el-form-item>
           <el-form-item label="半径范围：" prop="radius">
@@ -172,7 +172,7 @@
           <div class="liner"></div>
           <p class="sendTitle">发送标签</p>
           <div>
-            <el-checkbox-group v-model="addForm.checked" class="checkList">
+            <el-checkbox-group v-model="addForm.checked" class="checkList" @change="changeCheck">
               <el-checkbox
                 v-for="city in checkList"
                 :label="city"
@@ -258,7 +258,8 @@ import {
   smsTaskAdd,
   smsTaskDetails,
   smsTaskStatusModify,
-  smsTaskDelete
+  smsTaskModify,
+  smsTaskDelete,
 } from "api/userdata.js";
 import BMap from "BMap";
 import BMapSymbolSHAPEPOINT from "BMap_Symbol_SHAPE_POINT";
@@ -314,22 +315,22 @@ export default {
       contentTemplate: "", //内容模板拼接字符串
       checkList: [],
       addForm: {
-        name: "",
-        smsTemplate: "",
+        OrderName: "",
+        TemplateId: "",
         signature: "",
         smsLink: "",
         smsContent: "",
         area: "",
         age: [0, 0],
         sex: "",
-        address: "",
+        Address: "",
         radius: "",
         checked: [],
         number: ""
       },
       addrules: {
-        name: [{ required: true, message: "请输入模板名称", trigger: "blur" }],
-        smsTemplate: [
+        OrderName: [{ required: true, message: "请输入模板名称", trigger: "blur" }],
+        TemplateId: [
           { required: true, message: "请选择短信模板", trigger: "change" }
         ]
         // sex:[
@@ -368,6 +369,15 @@ export default {
       };
       smsTaskDetails(parmas).then(res => {
         this.checkList = res.Data.TagList;
+        this.addForm.Address = res.Data.Address;
+        this.addForm.number = res.Data.SendCount;
+        this.checked = res.Data.IsLoop;
+        if (this.addForm.Address) {
+          this.addr = true;
+        }else {
+          this.addr = false;
+        }
+        this.addForm = Object.assign({}, this.addForm);
         this.addForm.checked = res.Data.TagList.filter(item => {
           return item.IsSelect == true;
         });
@@ -495,24 +505,26 @@ export default {
 
       var content = this.getConditionList();
       let parmas = {
-        OrderName: this.addForm.name,
-        TemplateId: 3,
+        OrderName: this.addForm.OrderName,
+        TemplateId: this.addForm.TemplateId,
         Logitude: this.ruleForm.Longitude,
         Latitude: this.ruleForm.Latitude,
-        Address: this.addForm.address,
+        Address: this.addForm.Address,
         SendCount: this.addForm.number,
         SendType: st,
         SendTime: time1,
         IsLoop: this.checked,
         ContentList: content,
-        TagList: this.addForm.checked
+        TagList: this.addForm.checked,
+        OrderId: this.editId,
       };
+      let req = this.editId ? smsTaskModify : smsTaskAdd;
       parmas = Object.assign({}, parmas, obj);
-      smsTaskAdd(parmas).then(res => {
+      req(parmas).then(res => {
         this.addVisible = false;
         this._smsTaskList();
         this.$message({
-          message: "添加成功",
+          message: this.editId ? "修改成功" : "添加成功",
           showClose: true,
           type: "success"
         });
@@ -520,7 +532,7 @@ export default {
     },
     mapInit() {
       this.map = new BMap.Map(this.$refs.allmap); // 创建Map实例
-      this.map.centerAndZoom(new BMap.Point(114.3, 30.6), 11); // 初始化地图,设置中心点坐标（经纬度/城市的名称）和地图级别
+      this.map.centerAndZoom(new BMap.Point(120.21937541999992, 30.25924451802077), 11); // 初始化地图,设置中心点坐标（经纬度/城市的名称）和地图级别
       this.map.addControl(
         new BMap.MapTypeControl({
           //添加地图类型控件
@@ -613,6 +625,9 @@ export default {
         return document.getElementById(id);
       }
     },
+    changeCheck() {
+      this.addForm = Object.assign({}, this.addForm);
+    },
     upload() {},
     slectAddress() {
       this.dialogVisible = true;
@@ -646,10 +661,13 @@ export default {
               });
           }
         } else {
-          this.getLocationByIp().then(result => {
-            this.addPoint(result.point);
-            this.map.centerAndZoom(result.city, 11);
-          });
+          const point = new BMap.Point(120.21937541999992, 30.25924451802077);
+          this.addPoint(point);
+          this.map.centerAndZoom('杭州', 11);
+          // this.getLocationByIp().then(result => {
+          //   this.addPoint(result.point);
+          //   this.map.centerAndZoom(result.city, 11);
+          // });
         }
       }, 10);
     },
@@ -735,7 +753,7 @@ export default {
       this.getAddressName(1).then(result => {
         this.dialogVisible = false;
         this.ruleForm = Object.assign({}, this.ruleForm, result);
-        this.addForm.address = result.AddressDetails;
+        this.addForm.Address = result.AddressDetails;
         this.addForm = Object.assign({}, this.addForm);
       });
     },
@@ -746,11 +764,36 @@ export default {
     add() {
       this.titleName = "创建任务";
       this.addVisible = true;
+      this.addForm = {
+        OrderName: "",
+        TemplateId: "",
+        signature: "",
+        smsLink: "",
+        smsContent: "",
+        area: "",
+        age: [0, 0],
+        sex: "",
+        Address: "",
+        radius: "",
+        checked: [],
+        number: "",
+      };
+      setTimeout(() => {
+        this.$refs["addForm"].resetFields();
+      }, 100);
+      this.ruleForm = {
+        Logitude: "",
+        Latitude: "",
+      }
       this._smsTaskDetails(0);
     },
     //编辑任务
     edit(item){
-      
+      this.editId = item.OrderId;
+      this.titleName = "编辑任务"+item.OrderId;
+      this.addVisible = true;
+      this._smsTaskDetails(item.OrderId);
+      this.addForm = Object.assign({}, item);
     },
     //解析价格模板年龄
     parsePriceTemplateAge(obj) {
@@ -806,10 +849,25 @@ export default {
       if (obj == null) {
         return { visible: false };
       }
+      this.defaultSelect = [];
       const contextList = JSON.parse(obj.ContentValue);
       contextList.forEach(item => {
         if (item.choiced == true) {
           this.defaultSelect.push(item.Code);
+        }
+        if (item.List.length > 0) {
+          item.List.forEach(item1 => {
+            if (item1.choiced == true) {
+              this.defaultSelect.push(item1.Code);
+            }
+            if (item1.List.length > 0) {
+              item1.List.forEach(item2 => {
+                if (item2.choiced == true) {
+                  this.defaultSelect.push(item2.Code);
+                }
+              })
+            }
+          })
         }
       });
       return {
@@ -900,8 +958,10 @@ export default {
       this.$refs[formName].validate(valid => {
         if (valid) {
           if (this.addr == false) {
-            this.addForm.address == "";
-            this.range.value1 == "";
+            this.addForm.Address = "";
+            this.range.value1 = "";
+            this.ruleForm.Longitude = "";
+            this.ruleForm.Latitude = "";
           }
           if (this.radio0 == 0) {
             if (this.SendType == "") {

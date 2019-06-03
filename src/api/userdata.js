@@ -227,6 +227,13 @@ export function smsTaskAdd(params) {
   })
 }
 
+// 修改短信任务
+export function smsTaskModify(params) {
+  return fetch('/api/agent/manager/userdata/sms/task/modify', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
 // 获取短信任务详情
 export function smsTaskDetails(params) {
   return fetch('/api/agent/manager/userdata/sms/task/details', 'post', params).then(res => {
