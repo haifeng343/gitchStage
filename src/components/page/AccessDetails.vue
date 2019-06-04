@@ -3,15 +3,14 @@
     <div class="content-Box" style="margin-top:10px">
       <el-form :inline="true" :model="formInline" class="demo-form-inline">
         <el-form-item label="父母姓名">
-          <el-input v-model="name"></el-input>
+          <el-input v-model="formInline.name"></el-input>
         </el-form-item>
         <el-form-item label="电话号码">
-          <el-input v-model="mobile"></el-input>
+          <el-input v-model="formInline.mobile"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="search">搜 索</el-button>
         </el-form-item>
-        <el-button type="primary" @click="add" style="float:right">添加模板</el-button>
       </el-form>
 
       <el-table v-loading="loading" :data="List" border class="table" ref="multipleTable">
@@ -78,7 +77,11 @@ export default {
     },
     search() {},
     recordLog(item) {
-        this.$router.push(`/RecordLog/${item.FamilyId}`)
+        this.$router.push({
+          path:`/RecordLog/${item.FamilyId}`,
+          query:{
+            name : item.OrderName
+          }})
     },
 
   }

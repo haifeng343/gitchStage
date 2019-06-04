@@ -13,20 +13,35 @@
       <el-table v-loading="loading" :data="List" border class="table" ref="multipleTable">
         <el-table-column prop="Id" align="center" label="ID"></el-table-column>
         <el-table-column prop="FamilyId" align="center" label="父/母">
-        <template slot-scope="scope">
-          {{scope.row.FatherName}}/{{scope.row.MotherName}}
-        </template>
+          <template slot-scope="scope">{{scope.row.FatherName}}/{{scope.row.MotherName}}</template>
         </el-table-column>
         <el-table-column prop="Mobile" align="center" label="手机号"></el-table-column>
         <el-table-column prop="ChildName" align="center" label="小孩姓名"></el-table-column>
         <el-table-column align="center" label="状态">
           <template slot-scope="scope">
-            {{scope.row.Status | Status}}
+            <el-button type="text" @click="seeStatus(scope.row)" :class="{'red':scope.row.Status==2}">{{scope.row.Status | Status}}<span v-if="scope.row.SourceBatch>1">({{scope.row.SourceBatch}})</span></el-button>
           </template>
         </el-table-column>
         <el-table-column prop="CreateTime" align="center" label="发送时间"></el-table-column>
         <el-table-column prop="FinishTime" align="center" label="完成时间"></el-table-column>
       </el-table>
+
+      <!--查看弹窗-->
+      <el-dialog title="详细数据" :visible.sync="seeVisible" width="700px">
+        <el-table v-loading="loading" :data="detailList" border class="table" ref="multipleTable">
+        <el-table-column prop="Mobile" align="center" label="手机号"></el-table-column>
+        <el-table-column align="center" label="状态">
+          <template slot-scope="scope">
+            <span :class="{'red':scope.row.Status==2}">{{scope.row.Status | Status}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="CreateTime" align="center" label="发送时间"></el-table-column>
+      </el-table>
+        <span slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="seeVisible = false">关 闭</el-button>
+        </span>
+      </el-dialog>
+
       <div class="pagination">
         <el-pagination
           background
@@ -39,8 +54,6 @@
           :total="pageCount"
         ></el-pagination>
       </div>
-
-
     </div>
   </div>
 </template>
@@ -51,6 +64,8 @@ export default {
   data() {
     return {
       List: [],
+      detailList:[],//详情列表
+      seeVisible:false,
       pageCount: 0,
       pageSize: 30,
       currentPage: 1,
@@ -58,18 +73,24 @@ export default {
       addVisible: false,
       grow: false,
       formInline: {
-        name: "",
+        name: ""
       },
-      Id:'',
+      Id: "",
+      ordername: "",
+      orderId:'',
     };
   },
   mounted() {
-    this.Id = this.$route.params.id;
-    this._smsTaskSendRecord();
+    this.orderId = this.$route.params.id;
+    this.ordername = this.$route.params.OrderName;
+    this._smsTaskSendRecord(0).then(res => {
+        this.List = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      });
   },
-  filters:{
-    Status(params){
-      switch(params){
+  filters: {
+    Status(params) {
+      switch (params) {
         case 0:
           return "等待发送";
         case 1:
@@ -82,36 +103,48 @@ export default {
     }
   },
   methods: {
-    _smsTaskSendRecord() {
+    _smsTaskSendRecord(SourceId) {
       const params = {
-        Parent : this.formInline.name,
-        OrderId : this.Id,
-        TemplateName : '',
-        SourceId:0,
-        pageindex:this.currentPage,
-        pagecount:this.pageSize
-      }
-      smsTaskSendRecord(params).then( res => {
-        this.List = res.Data.List;
-        this.pageCount = res.Data.TotalCount;
-      })
+        Parent: SourceId>0?"":this.formInline.name,
+        OrderId: this.orderId,
+        TemplateName: "",
+        SourceId: SourceId,
+        pageindex: this.currentPage,
+        pagecount: this.pageSize
+      };
+      return smsTaskSendRecord(params);
+    },
+    seeStatus(item) {
+      this.seeVisible = true;
+      this.Id = item.Id;
+      this._smsTaskSendRecord(item.SourceId).then(res => {
+        this.detailList = res.Data.List;
+      });
     },
 
     //分页导航尺寸更改
     handleSizeChange(val) {
-        this.pageSize = val;
-        this._smsTaskSendRecord();
+      this.pageSize = val;
+      this._smsTaskSendRecord(0).then(res => {
+        this.List = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      });
     },
     // 分页导航
     handleCurrentChange(val) {
-        this.currentPage = val;
-        this._smsTaskSendRecord();
+      this.currentPage = val;
+      this._smsTaskSendRecord(0).then(res => {
+        this.List = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      });
     },
     search() {
       this.currentPage = 1;
-      this._smsTaskSendRecord();
-    },
-
+      this._smsTaskSendRecord(0).then(res => {
+        this.List = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      });
+    }
   }
 };
 </script>
@@ -121,13 +154,13 @@ export default {
   background-color: #d4d4d4;
   color: #ffffff;
 }
-.text2{
+.text2 {
   font-size: 12px;
   color: #ccc;
   text-align: right;
 }
-.three tr{
-  height:30px;
+.three tr {
+  height: 30px;
   line-height: 30px;
 }
 </style>

@@ -695,19 +695,19 @@ export default new Router({
                     // 访问详情-任务名称
                     path: '/AccessDetails/:id',
                     component: resolve => require(['../components/page/AccessDetails.vue'], resolve),
-                    meta: { title: '访问详情-任务名称', permission: true }
+                    meta: { title: '访问详情', permission: true }
                 },
                 {
                     // 记录详情-ID
                     path: '/RecordLog/:id',
                     component: resolve => require(['../components/page/RecordLog.vue'], resolve),
-                    meta: { title: '记录详情-ID', permission: true }
+                    meta: { title: '记录详情', permission: true }
                 },
                 {
                     // 发送记录-任务名称
                     path: '/SendLog/:id',
                     component: resolve => require(['../components/page/SendLog.vue'], resolve),
-                    meta: { title: '发送记录-任务名称', permission: true }
+                    meta: { title: '发送记录', permission: true }
                 },
                 {
                     // 委托管理-委托标签

@@ -30,7 +30,7 @@
         <el-table-column prop="Mobile" align="center" label="联系方式"></el-table-column>
         <el-table-column prop="OtherContacts" align="center" label="其他联系方式"></el-table-column>
         <el-table-column prop="Address" align="center" label="地址"></el-table-column>
-        <el-table-column prop="Address" align="center" label="TMK"></el-table-column>
+        <el-table-column prop="Type" align="center" label="业务名称"></el-table-column>
         <el-table-column label="账户状态" width="150" align="center">
           <template slot-scope="scope">
             <el-switch
@@ -43,10 +43,11 @@
             ></el-switch>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center"  width="350">
+        <el-table-column label="操作" align="center"  width="400px">
           <template slot-scope="scope">
+            <el-button type="primary" @click="ImportUrl(scope.row)">导入到TMK(AI电话)</el-button>
+            <el-button type="primary" @click="smsImportUrl(scope.row)">导入到TMK(短信)</el-button>
             <el-button type="primary" @click="jumpUrl(scope.row)">家庭详情</el-button>
-            <el-button type="primary" @click="ImportUrl(scope.row)">导入到TMK</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -131,7 +132,7 @@
 import axios from "axios";
 import { mapMutations, mapGetters } from "vuex";
 import { regionDataPlus,CodeToText} from 'element-china-area-data'
-import { getFamilyList, setFamilyStatusSet, addFamilybase, setExportTmk, } from "api/userdata.js";
+import { getFamilyList, setFamilyStatusSet, addFamilybase, setExportTmk, setExportTmkSms } from "api/userdata.js";
 export default {
   name: "Familylist",
   data() {
@@ -248,10 +249,27 @@ export default {
       console.log(this.Id);
       this._setExportTmk();
     },
-    //导入TMK
+    //导入TMK AI电话
     _setExportTmk() {
         const Id = this.Id;
         setExportTmk({Id:Id}).then( res => {
+          this.$message({
+            message:"导入成功",
+            showClose:true,
+            type:"success"
+          })
+        });
+      },
+      //导入到TMK 短信
+    smsImportUrl(item) {
+      this.Id = item.FamilyId;
+      console.log(this.Id);
+      this._setExportTmkSms();
+    },
+      //导入TMK 短信
+    _setExportTmkSms() {
+        const Id = this.Id;
+        setExportTmkSms({Id:Id}).then( res => {
           this.$message({
             message:"导入成功",
             showClose:true,

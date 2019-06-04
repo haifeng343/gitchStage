@@ -192,9 +192,16 @@ export function editChildSourceInfo(params) {
   })
 }
 
-// 原始数据导出到TMK
+// 原始数据导出到TMK(AI电话)
 export function setExportTmk(params) {
   return fetch('/api/agent/manager/userdata/family/export/tmk', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
+// 原始数据导出到TMK(短信)
+export function setExportTmkSms(params) {
+  return fetch('/api/agent/manager/userdata/family/export/tmk/sms', 'post', params).then(res => {
     return Promise.resolve(res)
   })
 }

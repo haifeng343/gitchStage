@@ -53,7 +53,7 @@
             >恢复发送</el-button>
             <el-button type="text" @click="edit(scope.row)">编辑</el-button>
             <el-button type="text" @click="access(scope.row)">访问详情</el-button>
-            <el-button type="text" @click="send(scope.row)">发送详情</el-button>
+            <el-button type="text" @click="send(scope.row)">发送记录</el-button>
             <el-button class="red" v-if="scope.row.SendStatus==1" type="text" @click="deleteData(scope.row.OrderId)">删除</el-button>
           </template>
         </el-table-column>
@@ -464,10 +464,18 @@ export default {
       this._smsTaskList();
     },
     send(item) {
-      this.$router.push(`/SendLog/${item.OrderId}`);
+      this.$router.push({
+        path:`/SendLog/${item.OrderId}`,
+        query: {
+          name: item.OrderName
+        }});
     },
     access(item) {
-      this.$router.push(`/AccessDetails/${item.OrderId}`);
+      this.$router.push({
+        path:`/AccessDetails/${item.OrderId}`,
+        query: {
+          name: item.OrderName
+        }});
     },
     //查看短信模板内容
     templateSee(item) {
