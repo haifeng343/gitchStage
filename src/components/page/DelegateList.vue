@@ -170,8 +170,8 @@
       <h3>委托模板</h3>
       <h5 style="margin:25px 0 10px 0">数据源</h5>
       <el-checkbox-group v-model="SourceCheckList" class="checkList">
-        <el-checkbox v-for="item in SourceList" v-model="item.IsSelect" :label="item" :value="item.Type" :key="item.Type" >{{item.Name}}
-          <el-button type="primary" @click="item.IsDefault = true" :class="{'grow':item.IsDefault==true}" style="margin:0 30px 0 10px">默认选中</el-button>
+        <el-checkbox v-for="(item,index) in SourceList" v-model="item.IsSelect" :label="item" :value="item.Type" :key="item.Type" >{{item.Name}}
+          <el-button type="primary" @click="active(item, index)" :class="{'grow':item.IsDefault==true}" style="margin:0 30px 0 10px">默认选中</el-button>
         </el-checkbox>
       </el-checkbox-group>
         
@@ -575,6 +575,15 @@ export default {
     this._getManagerCallCenterDelegateList();
   },
   methods: {
+    active(item, index) {
+      for (let k of this.SourceCheckList) {
+        if (item.Type == k.Type && item.IsSelect) {
+          this.SourceList[index].IsDefault = !this.SourceList[index].IsDefault;
+          break;
+        }
+      }
+      this.SourceList = [...this.SourceList];
+    },
     ChangeData() {
       console.log("ssssss");
     },
@@ -1160,6 +1169,12 @@ export default {
   background-color: #ccc;
   border: none;
   color: #fff;
+}
+.grow:focus {
+  background: #ccc;
+}
+.grow:hover {
+  background: #66b1ff;
 }
 .checkList .el-checkbox__label{
   margin-right: 15px;
