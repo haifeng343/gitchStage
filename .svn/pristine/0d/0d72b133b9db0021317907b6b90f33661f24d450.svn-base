@@ -20,7 +20,6 @@
                   </el-option>
                 </el-select>
                 <el-button icon="search" @click="search" style="color:018AD8">搜索</el-button>
-                <!-- <el-button type="primary" @click="smsAdd" style="float:right">添 加</el-button> -->
             </div>
             <el-table :data="tableData" border class="table" ref="multipleTable">
                 <el-table-column prop="TemplateSysId" align="center" label="ID" >
@@ -204,30 +203,6 @@
                     <el-button v-else type="primary" size="medium" class="dialog-certain" @click="editcVisible = false">关 闭</el-button>
                 </span>
             </el-dialog>
-            <!--添加短信模板-->
-            <!-- <el-dialog title="添加短信模板" :visible.sync="smsVisible" ref="smsForm" :rules="smsForm" width="500px">
-                <el-form :inline="true" :model="smsForm" class="dd">
-                <el-form-item class="name" label="模板名称：" prop="TemplateName">
-                    <el-input v-model="smsForm.TemplateName" placeholder="请输入模板名称，不超过16个字符"></el-input>
-                </el-form-item>
-                <el-form-item label="短信签名：" prop="SignName">
-                    <el-select v-model="smsForm.SignName" placeholder="">
-                        <el-option :label="item.SignName" :value="item.SignName" v-for="item in listCode" :key="item.SignId"></el-option>
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="短信内容：" prop="SmsContent">
-                    <el-input
-                    type="textarea"
-                    style="minHeight:100px" 
-                    placeholder="请输入短信内容文字，不超过128个字符"
-                    v-model="smsForm.SmsContent">
-                    </el-input>
-                </el-form-item>
-                </el-form>
-                <div slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="submitUpload('smsForm')">提交审核</el-button>
-                </div>
-            </el-dialog> -->
         </div>
     </div>
 </template>
@@ -285,13 +260,6 @@
                 changeVisible:false,
                 channelVisible: false,
                 lookVisible:false,
-                smsVisible:false,
-                listCode:[],//模板列表
-                smsForm:{
-                    TemplateName:'',
-                    SignName:'',
-                    SmsContent:''
-                },
                 addForm: {
                   refundReason:'',
                   refundmoney:'',
@@ -367,17 +335,6 @@
                         { required: true, message: '请输入名称', trigger: 'blur' },
                     ],
                 },
-                smsForm: {
-                    TemplateName: [
-                        { required: true, message: '请输入模板名称', trigger: 'blur' }
-                    ],
-                    SignName:[
-                        { required: true, message: '请输入短信签名', trigger: 'change' },
-                    ],
-                    SmsContent:[
-                        { required: true, message: '请输入短信内容', trigger: 'blur' },
-                    ],
-                },
             }
         },
         created() {
@@ -386,9 +343,6 @@
         computed: {
         },
         methods: {
-            smsAdd() {
-                this.smsVisible = true;
-            },
             changeChannel(value){
                 this.channelForm.ChannelType = value
             },
@@ -485,17 +439,6 @@
                     return false;
                 }
               });
-            },
-            //添加
-            submitUpload(formName) {
-                 this.$refs[formName].validate((valid) => {
-          if (valid) {
-            alert('submit!');
-          } else {
-            console.log('error submit!!');
-            return false;
-          }
-        });
             },
             handleEdit(item){
               this.editVisible = true
@@ -675,7 +618,7 @@
                 'pagecount': this.pagesize,
                 'SellerName': this.username,
                 'SellerPhone': this.phone,
-                'Type':2
+                'Type':1
               }
               await getSContentTem(params).then(res =>{
                 this.tableData = res.Data.List

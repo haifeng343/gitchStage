@@ -167,6 +167,18 @@
       :visible.sync="delegateTemplateVisible"
       width="633px"
     >
+      <h3>委托模板</h3>
+      <h5 style="margin:25px 0 10px 0">数据源</h5>
+      <el-checkbox-group v-model="SourceCheckList" class="checkList">
+        <el-checkbox v-for="item in SourceList" v-model="item.IsSelect" :label="item" :value="item.Type" :key="item.Type" >{{item.Name}}
+          <el-button type="primary" @click="item.IsDefault = true" :class="{'grow':item.IsDefault==true}" style="margin:0 30px 0 10px">默认选中</el-button>
+        </el-checkbox>
+      </el-checkbox-group>
+        
+      <h3 style="margin-top:10px">委托标签</h3>
+      <el-checkbox-group v-model="TagCheckList" class="checkList">
+        <el-checkbox v-model="item.IsSelect" v-for="item in TagList" :label="item" :value="item.DelegateTagId" :key="item.DelegateTagId">{{item.DelegateTagName}}</el-checkbox>
+      </el-checkbox-group>
       <h3>委托内容</h3>
       <div class="delegateTemplate-module">
         <div class="delegateTemplate-module-item">
@@ -379,6 +391,11 @@ export default {
       }
     };
     return {
+      radio:1,//数据源
+      SourceList:[],//委托标签
+      SourceCheckList:[],//委托选中标签
+      TagList:[],//数据标签
+      TagCheckList:[],//选中数据标签
       sellerName: "",
       delegateName: "",
       status: 0,
@@ -916,6 +933,13 @@ export default {
       this.delegateTemplateChecked = [];
       this.delegateTemplateExpanded = [];
       this._getManagerCallCenterDelegateTemplate(item.Id).then(val => {
+        this.TagCheckList = this.TagList.filter(e=>{
+          return e.IsSelect==true;
+        });
+        this.SourceCheckList = this.SourceList.filter(e=>{
+          return e.IsSelect==true;
+        });;
+        console.log(this.TagList);
         this.delegateTemplateForm.DelegateName = item.Name;
         this.delegateTemplateVisible = true;
         this.delegateTemplateTime = [
@@ -1022,6 +1046,8 @@ export default {
       };
       return getManagerCallCenterDelegateTemplate(params).then(res => {
         this.delegateTemplateForm = res.Data;
+        this.TagList = res.Data.TagList;
+        this.SourceList = res.Data.SourceList;
       });
     },
     //编辑委托活动委托模板信息
@@ -1037,6 +1063,8 @@ export default {
         ConditionList: this.getConditionList(),
         DirectorRemark: this.delegateTemplateForm.DirectorRemark,
         ContactsName: this.delegateTemplateForm.ContactsName,
+        SourceList:this.SourceCheckList,
+        TagList:this.TagCheckList,
         ContactsMobile: this.delegateTemplateForm.ContactsMobile
       };
       return modifyManagerCallCenterDelegateTemplate(params);
@@ -1119,4 +1147,23 @@ export default {
   overflow-x: hidden;
   border: 1px solid #eeeeee;
 }
+.checkList{
+  width: 100%;
+  display: flex;
+  margin: 15px 0;
+  flex-direction: row;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  line-height: 40px;
+}
+.grow{
+  background-color: #ccc;
+  border: none;
+  color: #fff;
+}
+.checkList .el-checkbox__label{
+  margin-right: 15px;
+}
+</style>
+<style>
 </style>

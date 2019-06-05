@@ -103,6 +103,7 @@
           :rules="addrules"
           ref="addForm"
           label-width="140px"
+          class="demo-ruleForm"
         >
           <el-form-item label="任务名称：" prop="OrderName">
             <el-input v-model="addForm.OrderName"></el-input>
