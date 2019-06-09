@@ -398,7 +398,7 @@ export default new Router({
                     // 委托列表页面
                     path: '/delegatelist',
                     component: resolve => require(['../components/page/DelegateList.vue'], resolve),
-                    meta: { title: '委托活动',father_path:'delegatelist'  }
+                    meta: { title: '委托列表',father_path:'delegatelist'  }
                 },
                 {
                     // 委托详情页面

@@ -29,15 +29,15 @@
         style="float:right;margin-bottom:10px;"
       >添加委托</el-button>
       <el-table :data="tableData" fixed border ref="multipleTable">
-        <el-table-column prop="Id" align="center" label="ID" fixed></el-table-column>
-        <el-table-column prop="SellerName" align="center" label="商家名称"></el-table-column>
-        <el-table-column prop="Name" align="center" label="委托名称">
+        <el-table-column prop="Id" align="center" label="ID" width="90" fixed></el-table-column>
+        <el-table-column prop="SellerName" align="center" width="100" label="商家名称"></el-table-column>
+        <el-table-column prop="Name" align="center" width="100" label="委托名称">
           <template slot-scope="scope">
             <el-button type="text" @click="openDelegateForm(scope.row)">{{scope.row.Name}}</el-button>
           </template>
         </el-table-column>
-        <el-table-column prop="DistributionStatus" align="center" label="分配状态"></el-table-column>
-        <el-table-column align="center" label="状态">
+        <el-table-column prop="DistributionStatus" align="center" width="110" label="分配状态"></el-table-column>
+        <el-table-column align="center" width="100" label="状态">
           <template slot-scope="scope">
             <el-button
               type="text"
@@ -45,7 +45,7 @@
             >{{getStatus(scope.row.Status)}}</el-button>
           </template>
         </el-table-column>
-        <el-table-column align="center" label="委托详情">
+        <el-table-column align="center" width="130" label="委托详情">
           <template
             slot-scope="scope"
             v-if="scope.row.DistributionStatus.indexOf('部分分配')!=-1 || scope.row.DistributionStatus.indexOf('全部分配')!=-1"
@@ -54,11 +54,12 @@
             <div>跟进名单数量：{{scope.row.TraceCountToday}}/{{scope.row.TraceCount}}</div>
           </template>
         </el-table-column>
-        <el-table-column align="center" label="申请时间">
+        <el-table-column align="center" width="135" label="申请时间">
           <template slot-scope="scope">{{ scope.row.ApplyTime | normalTime(scope.row.ApplyTime)}}</template>
         </el-table-column>
-        <el-table-column label="操作" width="300" align="center" fixed="right">
+        <el-table-column label="操作" align="center" fixed="right">
           <template slot-scope="scope">
+            <el-button type="text" @click="automaticMatch(scope.row)">自动匹配</el-button>
             <el-button type="text" @click="jumpToDelegateDetails(scope.row)">委托详情</el-button>
             <el-button type="text" @click="openDelegateTemplateForm(scope.row)">委托模板</el-button>
             <el-button type="text" @click="jumpToDelegateTalkingskill(scope.row)">话术列表</el-button>
@@ -82,6 +83,79 @@
         ></el-pagination>
       </div>
     </div>
+    <!-- 自动匹配 -->
+    <el-dialog
+      :title="titletup"
+      :loding="loading"
+      element-loading-text="正在自动匹配..."
+      :visible.sync="matchVisible"
+      width="600px"
+    >
+      <el-form
+        :model="ruleForm"
+        :rules="rules"
+        ref="ruleForm"
+        label-width="150px"
+        class="demo-ruleForm"
+      >
+        <el-form-item label="委托意向时长：" prop="duration">
+          <el-select v-model="ruleForm.duration" placeholder="请选择">
+            <el-option v-for="item in options" :key="item.Id" :label="item.name" :value="item.Id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="数据源：" prop="dataSource">
+          <el-select v-model="ruleForm.dataSource" placeholder="请选择">
+            <el-option
+              v-for="item in sourceList"
+              :key="item.Id"
+              :label="item.name"
+              :value="item.Id"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="matchVisible = false">取 消</el-button>
+        <el-button type="primary" @click="matchSure('ruleForm')">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 匹配结果 -->
+    <el-dialog :title="`匹配商家-${sellerName}`" :visible.sync="matchListVisible" width="1000px">
+      <!-- <p style="margin-bottom:10px">共匹配到：1111人</p>
+       <el-table :data="tableData" fixed border>
+         <el-table-column prop="Id" align="center" label="父/母姓名">
+           <template slot-scope="scope">
+            <el-button type="text">{{scope.row.FatherName}}/{{scope.row.MotherName}}</el-button>
+          </template>
+         </el-table-column>
+         <el-table-column prop="Id" align="center" label="孩子姓名"></el-table-column>
+        <el-table-column align="center" label="性别">
+          <template slot-scope="scope">
+            <span v-if="scope.row.Sex == 1 ?'男':'女'">{{scope.row.Sex}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="Id" align="center" label="年龄"></el-table-column>
+        <el-table-column prop="SellerName" align="center" label="委托标签"></el-table-column>
+        <el-table-column prop="Id" align="center" label="意向委托时间"></el-table-column>
+       </el-table>
+       <el-pagination
+          background
+          style="text-align:right;margin:20px 0"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :page-sizes="[10, 20, 30, 40, 50]"
+          :current-page="currentPage"
+          :page-size="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="totalCount"
+      ></el-pagination>-->
+      <p>匹配成功</p>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="matchListVisible = false">关 闭</el-button>
+      </span>
+    </el-dialog>
+
     <!-- 活动详情弹出框 -->
     <el-dialog title="活动内容" :visible.sync="editVisible" width="660px">
       <el-form ref="editForm" :model="editForm" :rules="editrules">
@@ -170,14 +244,32 @@
       <h3>委托模板</h3>
       <h5 style="margin:25px 0 10px 0">数据源</h5>
       <el-checkbox-group v-model="SourceCheckList" class="checkList">
-        <el-checkbox v-for="(item,index) in SourceList" v-model="item.IsSelect" :label="item" :value="item.Type" :key="item.Type" >{{item.Name}}
-          <el-button type="primary" @click="active(item, index)" :class="{'grow':item.IsDefault==true}" style="margin:0 30px 0 10px">默认选中</el-button>
+        <el-checkbox
+          v-for="(item,index) in SourceList"
+          v-model="item.IsSelect"
+          :label="item"
+          :value="item.Type"
+          :key="item.Type"
+        >
+          {{item.Name}}
+          <el-button
+            type="primary"
+            @click="active(item, index)"
+            :class="{'grow':item.IsDefault==true}"
+            style="margin:0 30px 0 10px"
+          >默认选中</el-button>
         </el-checkbox>
       </el-checkbox-group>
-        
+
       <h3 style="margin-top:10px">委托标签</h3>
       <el-checkbox-group v-model="TagCheckList" class="checkList">
-        <el-checkbox v-model="item.IsSelect" v-for="item in TagList" :label="item" :value="item.DelegateTagId" :key="item.DelegateTagId">{{item.DelegateTagName}}</el-checkbox>
+        <el-checkbox
+          v-model="item.IsSelect"
+          v-for="item in TagList"
+          :label="item"
+          :value="item.DelegateTagId"
+          :key="item.DelegateTagId"
+        >{{item.DelegateTagName}}</el-checkbox>
       </el-checkbox-group>
       <h3>委托内容</h3>
       <div class="delegateTemplate-module">
@@ -286,7 +378,12 @@
       <h3>反馈选项</h3>
       <div class="delegateTemplate-module">
         <el-checkbox-group v-model="delegateTemplateResCheckedList">
-          <el-checkbox style="margin-right:20px;" v-for="item in delegateTemplateResList" :label="item.ContentTypeDes" :key="item.ContentType">{{item.ContentTypeDes}}</el-checkbox>
+          <el-checkbox
+            style="margin-right:20px;"
+            v-for="item in delegateTemplateResList"
+            :label="item.ContentTypeDes"
+            :key="item.ContentType"
+          >{{item.ContentTypeDes}}</el-checkbox>
         </el-checkbox-group>
       </div>
       <h3>责任销售</h3>
@@ -375,7 +472,8 @@ import {
   getManagerCallCenterDelegateCondition,
   addManagerCallCenterDelegate,
   getManagerCallCenterSellerList,
-  modifyManagerCallCenterDelegate
+  modifyManagerCallCenterDelegate,
+  callcenterDelegateDatamatch
 } from "api/entrust.js";
 export default {
   name: "DelegateList",
@@ -391,14 +489,46 @@ export default {
       }
     };
     return {
-      radio:1,//数据源
-      SourceList:[],//委托标签
-      SourceCheckList:[],//委托选中标签
-      TagList:[],//数据标签
-      TagCheckList:[],//选中数据标签
+      radio: 1, //数据源
+      SourceList: [], //委托标签
+      SourceCheckList: [], //委托选中标签
+      TagList: [], //数据标签
+      TagCheckList: [], //选中数据标签
       sellerName: "",
       delegateName: "",
       status: 0,
+      titletup: "", //头部
+      loading: false,
+      matchVisible: false, //自动匹配弹窗
+      ruleForm: {
+        duration: "", //委托意向时长
+        dataSource: ""
+      },
+      rules: {
+        duration: [
+          { required: true, message: "请选择委托意向时长", trigger: "change" }
+        ],
+        dataSource: [
+          { required: true, message: "请选择数据源", trigger: "change" }
+        ]
+      },
+      options: [
+        { Id: 1, name: "3天内" },
+        { Id: 2, name: "7天内" },
+        { Id: 3, name: "15天内" },
+        { Id: 4, name: "30天内" },
+        { Id: 5, name: "60天内" }
+      ],
+      sourceList: [
+        { Id: 0, name: "全部" },
+        { Id: 1, name: "TMK（AI）" },
+        { Id: 2, name: "TMK（短信）" }
+      ],
+      Id: "",
+      matchListVisible: false, //匹配结果列表
+      currentPage: 1,
+      pageSize: 30,
+      totalCount: 0,
       statusList: [
         {
           id: 0,
@@ -575,6 +705,7 @@ export default {
     this._getManagerCallCenterDelegateList();
   },
   methods: {
+    //默认
     active(item, index) {
       for (let k of this.SourceCheckList) {
         if (item.Type == k.Type && item.IsSelect) {
@@ -583,6 +714,44 @@ export default {
         }
       }
       this.SourceList = [...this.SourceList];
+    },
+    //自动匹配
+    automaticMatch(item) {
+      this.ruleForm = {
+        duration: "",
+        dataSource: ""
+      };
+      this.Id = item.Id;
+      this.sellerName = item.SellerName;
+      this.matchVisible = true;
+      this.titletup = "自动匹配-" + item.Name;
+    },
+    _callcenterDelegateDatamatch() {
+      const params = {
+        DelegateId: this.Id,
+        Type: this.ruleForm.duration,
+        DataSource: this.ruleForm.dataSource
+      };
+      callcenterDelegateDatamatch(params).then(res => {
+        this.loading = false;
+        this.matchVisible = false;
+        this.$message({
+          type: "success",
+          message: "匹配成功",
+          showClose: true
+        });
+      });
+    },
+    matchSure(formName) {
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          this.loading = true;
+          this._callcenterDelegateDatamatch();
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
     },
     ChangeData() {
       console.log("ssssss");
@@ -743,35 +912,47 @@ export default {
     },
     //解析反馈选项
     parsePriceTemplateRes() {
-      let arr=[];
-      let arrCheck=[];
-      this.delegateTemplateForm.ConditionList.forEach(item=>{
-        if(item.ContentType==="MSG_PRICE_TYPE_REPLY_PARENT"){
-          arr.push({ContentType:item.ContentType,ContentTypeDes:item.ContentTypeDes});
-          if(item.ContentValue=="1"){
+      let arr = [];
+      let arrCheck = [];
+      this.delegateTemplateForm.ConditionList.forEach(item => {
+        if (item.ContentType === "MSG_PRICE_TYPE_REPLY_PARENT") {
+          arr.push({
+            ContentType: item.ContentType,
+            ContentTypeDes: item.ContentTypeDes
+          });
+          if (item.ContentValue == "1") {
             arrCheck.push(item.ContentTypeDes);
           }
         }
-        if(item.ContentType==="MSG_PRICE_TYPE_REPLY_FULL_NAME"){
-          arr.push({ContentType:item.ContentType,ContentTypeDes:item.ContentTypeDes});
-          if(item.ContentValue=="1"){
+        if (item.ContentType === "MSG_PRICE_TYPE_REPLY_FULL_NAME") {
+          arr.push({
+            ContentType: item.ContentType,
+            ContentTypeDes: item.ContentTypeDes
+          });
+          if (item.ContentValue == "1") {
             arrCheck.push(item.ContentTypeDes);
           }
         }
-        if(item.ContentType==="MSG_PRICE_TYPE_REPLY_SEX"){
-          arr.push({ContentType:item.ContentType,ContentTypeDes:item.ContentTypeDes});
-          if(item.ContentValue=="1"){
+        if (item.ContentType === "MSG_PRICE_TYPE_REPLY_SEX") {
+          arr.push({
+            ContentType: item.ContentType,
+            ContentTypeDes: item.ContentTypeDes
+          });
+          if (item.ContentValue == "1") {
             arrCheck.push(item.ContentTypeDes);
           }
         }
-        if(item.ContentType==="MSG_PRICE_TYPE_REPLY_AGE"){
-          arr.push({ContentType:item.ContentType,ContentTypeDes:item.ContentTypeDes});
-          if(item.ContentValue=="1"){
+        if (item.ContentType === "MSG_PRICE_TYPE_REPLY_AGE") {
+          arr.push({
+            ContentType: item.ContentType,
+            ContentTypeDes: item.ContentTypeDes
+          });
+          if (item.ContentValue == "1") {
             arrCheck.push(item.ContentTypeDes);
           }
         }
-      })
-      this.delegateTemplateResCheckedList=arrCheck;
+      });
+      this.delegateTemplateResCheckedList = arrCheck;
       return arr;
     },
     //拼接价格模板条件选项
@@ -942,12 +1123,12 @@ export default {
       this.delegateTemplateChecked = [];
       this.delegateTemplateExpanded = [];
       this._getManagerCallCenterDelegateTemplate(item.Id).then(val => {
-        this.TagCheckList = this.TagList.filter(e=>{
-          return e.IsSelect==true;
+        this.TagCheckList = this.TagList.filter(e => {
+          return e.IsSelect == true;
         });
-        this.SourceCheckList = this.SourceList.filter(e=>{
-          return e.IsSelect==true;
-        });;
+        this.SourceCheckList = this.SourceList.filter(e => {
+          return e.IsSelect == true;
+        });
         console.log(this.TagList);
         this.delegateTemplateForm.DelegateName = item.Name;
         this.delegateTemplateVisible = true;
@@ -963,7 +1144,7 @@ export default {
         this.delegateTemplateSex = this.parsePriceTemplateSex();
         this.delegateTemplateRange = this.parsePriceTemplateRange();
         this.delegateTemplateArea = this.parsePriceTemplateArea();
-        this.delegateTemplateResList=this.parsePriceTemplateRes();
+        this.delegateTemplateResList = this.parsePriceTemplateRes();
         if (this.delegateTemplateArea.visible) {
           this.delegateTemplateArea.value1.forEach(v1 => {
             if (v1.choiced) {
@@ -1072,8 +1253,8 @@ export default {
         ConditionList: this.getConditionList(),
         DirectorRemark: this.delegateTemplateForm.DirectorRemark,
         ContactsName: this.delegateTemplateForm.ContactsName,
-        SourceList:this.SourceCheckList,
-        TagList:this.TagCheckList,
+        SourceList: this.SourceCheckList,
+        TagList: this.TagCheckList,
         ContactsMobile: this.delegateTemplateForm.ContactsMobile
       };
       return modifyManagerCallCenterDelegateTemplate(params);
@@ -1156,7 +1337,7 @@ export default {
   overflow-x: hidden;
   border: 1px solid #eeeeee;
 }
-.checkList{
+.checkList {
   width: 100%;
   display: flex;
   margin: 15px 0;
@@ -1165,7 +1346,7 @@ export default {
   flex-wrap: wrap;
   line-height: 40px;
 }
-.grow{
+.grow {
   background-color: #ccc;
   border: none;
   color: #fff;
@@ -1176,7 +1357,7 @@ export default {
 .grow:hover {
   background: #66b1ff;
 }
-.checkList .el-checkbox__label{
+.checkList .el-checkbox__label {
   margin-right: 15px;
 }
 </style>

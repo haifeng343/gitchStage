@@ -89,6 +89,7 @@
             <span v-if="scope.row.RecordFile!=null&&scope.row.RecordFile.length>0">
               <el-button type="text" @click="RecordListen(scope.row)">录音听取</el-button>
             </span>
+            <el-button type="text" icon="el-icon-document-copy" @click="opencopyForm(scope.row)">复制</el-button>
             <el-button type="text" icon="el-icon-edit" @click="openRemarkForm(scope.row)">备注</el-button>
             <el-button type="text" icon="el-icon-edit" @click="openBackForm(scope.row)">回退记录</el-button>
             <el-button
@@ -153,6 +154,30 @@
         ></el-pagination>
       </div>
     </div>
+    <!--复制-->
+    <el-dialog :title="titletup" class="cascader" :visible.sync="copyVisible" width="600px">
+      <el-input
+        v-model="exportName"
+        placeholder="搜索商家内容"
+        style="width:476px;text-align:center;margin-right:20px"
+        icon="el-icon-search"
+      ></el-input>
+      <el-button @click="exportSearch" type="primary">搜 索</el-button>
+      <div class="cascaderDiv">
+        <el-cascader-panel
+          ref="cascaderAddr"
+          :options="options"
+          v-model="optionValue"
+          :props="props"
+        ></el-cascader-panel>
+      </div>
+      <p style="margin-top: 20px;">复制到：</p>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="copyVisible = false">取 消</el-button>
+        <el-button type="primary" @click="copySure">确 定</el-button>
+      </span>
+    </el-dialog>
+
     <!-- 业务员弹出框 -->
     <el-dialog
       :title="`业务员-${accountForm.AccountName}`"
@@ -300,7 +325,7 @@
     <el-dialog
       :title="`推送状态-${pushStatusForm.childName}`"
       :visible.sync="pushStatusVisible"
-      width="630px"
+      width="700px"
     >
       <el-form :inline="true" class="demo-form-inline" ref="pushStatusForm" :model="pushStatusForm">
         <el-form-item label="导出人员：" label-width="120px" prop="pushAccount">
@@ -320,13 +345,31 @@
           </el-select>
         </el-form-item>
         <el-form-item label="推送至：" label-width="120px" prop="storeId">
-          <el-cascader
+          <el-input v-model="storeValue" style="width:300px;margin-bottom:10px"></el-input>
+          <i style="position:absolute;right:10px;top:12px" class="el-icon-arrow-down"></i>
+          <div class="capos">
+            <el-input
+              v-model="exportName"
+              placeholder="搜索商家内容"
+              style="width:214px;margin-right:20px"
+              icon="el-icon-search"
+            ></el-input>
+            <el-button @click="exportSearch" type="primary">搜 索</el-button>
+            <el-checkbox v-model="typeId">按建议推送至门店</el-checkbox>
+            <el-cascader-panel
+              :options="pushStatusForm.storeIdList"
+              v-model="pushStatusForm.storeId"
+              :props="pushStatusForm.props"
+              :disabled="pushStatusForm.pushStatus!=3"
+            ></el-cascader-panel>
+          </div>
+          <!-- <el-cascader
             :options="pushStatusForm.storeIdList"
             v-model="pushStatusForm.storeId"
             :props="pushStatusForm.props"
             style="width:300px;"
             :disabled="pushStatusForm.pushStatus!=3"
-          ></el-cascader>
+          ></el-cascader>-->
         </el-form-item>
         <el-form-item label="备注：" label-width="120px">
           <el-input type="textarea" rows="6" style="width:300px;" v-model="pushStatusForm.remark"></el-input>
@@ -397,6 +440,19 @@ export default {
       appointmentCount: 0,
       arriveCount: 0,
       invalidCount: 0,
+      copyVisible: false,
+      titletup: "",
+      exportName: "", //搜索导出名单商家
+      options: [], //级联数据
+      optionValue: ["", "", ""], //选中的值
+      Id: "",
+      props: {
+        value: "Id",
+        label: "Name",
+        children: "Children"
+      },
+      storeValue: "", //推送 选中的值
+      typeId: true, //按建议推送至门店
 
       searchChildName: "",
       searchAccountName: "",
@@ -470,7 +526,9 @@ export default {
         pushStatusList: [
           { id: 1, name: "直接推送" },
           { id: 2, name: "需主管确认" },
-          { id: 3, name: "推送至门店" }
+          { id: 3, name: "推送至门店" },
+          { id: 4, name: "意向委托" },
+          { id: 5, name: "系统公共池" }
         ],
         props: {
           value: "Id",
@@ -516,6 +574,28 @@ export default {
     this.init();
   },
   methods: {
+    //复制
+    opencopyForm(item) {
+      this.Id = item.Id;
+      this.titletup = "复制-" + item.FatherName + "/" + item.MotherName;
+      this.copyVisible = true;
+      this._DelegateRelList();
+    },
+    exportSearch() {
+      this._DelegateRelList();
+    },
+    //级联
+    _DelegateRelList() {
+      const params = {
+        Id: this.Id,
+        Type: 2,
+        SellerName: this.exportName
+      };
+      getManagerCallCenterDelegateRelList(params).then(res => {
+        this.options = res.Data;
+      });
+    },
+    copySure() {},
     init() {
       this.delegateId = this.$route.params.id;
       this._getManagerCallCenterDelegateExportList();
@@ -749,8 +829,8 @@ export default {
         pagecount: this.pagesize,
         StartTime: this.searchTime == null ? "" : this.searchTime[0],
         EndTime: this.searchTime == null ? "" : this.searchTime[1],
-        Status:this.searchStatus,
-        PushStatus:this.searchPushStatus
+        Status: this.searchStatus,
+        PushStatus: this.searchPushStatus
       };
       return getManagerCallCenterDelegateExportList(params).then(res => {
         this.tableData = res.Data.List;
@@ -907,5 +987,11 @@ export default {
   background-color: #3a8ee6;
   top: 1px;
   left: -8px;
+}
+.capos {
+  width: 300px;
+}
+.el-cascader-panel.is-bordered {
+  border: none;
 }
 </style>

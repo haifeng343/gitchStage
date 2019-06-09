@@ -1,8 +1,8 @@
-import Vue from 'vue'
+import Vue, { VNode } from 'vue'
 import { MessageType } from './message'
 
 export type MessageBoxCloseAction = 'confirm' | 'cancel' | 'close'
-export type MessageBoxData = MessageBoxInputData
+export type MessageBoxData = MessageBoxInputData | MessageBoxCloseAction
 
 export interface MessageBoxInputData {
   value: string,
@@ -47,7 +47,7 @@ export interface ElMessageBoxOptions {
   title?: string
 
   /** Content of the MessageBox */
-  message?: string
+  message?: string | VNode
 
   /** Message type, used for icon display */
   type?: MessageType

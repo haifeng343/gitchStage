@@ -70,7 +70,8 @@ exports.default = {
     cascader: {
       noMatch: 'Sobivad andmed puuduvad',
       loading: 'Laadimine',
-      placeholder: 'Vali'
+      placeholder: 'Vali',
+      noData: 'Andmed puuduvad'
     },
     pagination: {
       goto: 'Mine lehele',
@@ -85,7 +86,7 @@ exports.default = {
       error: 'Vigane sisend'
     },
     upload: {
-      deleteTip: 'Vajuta kustuta et eemaldada',
+      deleteTip: 'Vajuta "Kustuta", et eemaldada',
       delete: 'Kustuta',
       preview: 'Eelvaate',
       continue: 'Jätka'
@@ -107,6 +108,12 @@ exports.default = {
       filterPlaceholder: 'Sisesta märksõna',
       noCheckedFormat: '{total} objekti',
       hasCheckedFormat: '{checked}/{total} valitud'
+    },
+    image: {
+      error: 'FAILED' // to be translated
+    },
+    pageHeader: {
+      title: 'Back' // to be translated
     }
   }
 };

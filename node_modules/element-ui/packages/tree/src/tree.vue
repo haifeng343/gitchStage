@@ -14,6 +14,7 @@
       :node="child"
       :props="props"
       :render-after-expand="renderAfterExpand"
+      :show-checkbox="showCheckbox"
       :key="getNodeKey(child)"
       :render-content="renderContent"
       @node-expand="handleNodeExpand">
@@ -94,6 +95,7 @@
       },
       defaultCheckedKeys: Array,
       defaultExpandedKeys: Array,
+      currentNodeKey: [String, Number],
       renderContent: Function,
       showCheckbox: {
         type: Boolean,
@@ -110,7 +112,6 @@
           return {
             children: 'children',
             label: 'label',
-            icon: 'icon',
             disabled: 'disabled'
           };
         }
@@ -126,7 +127,8 @@
       indent: {
         type: Number,
         default: 18
-      }
+      },
+      iconClass: String
     },
 
     computed: {
@@ -420,14 +422,15 @@
           dropType = 'none';
         }
 
+        const iconPosition = dropNode.$el.querySelector('.el-tree-node__expand-icon').getBoundingClientRect();
         const dropIndicator = this.$refs.dropIndicator;
         if (dropType === 'before') {
-          indicatorTop = targetPosition.top - treePosition.top;
+          indicatorTop = iconPosition.top - treePosition.top;
         } else if (dropType === 'after') {
-          indicatorTop = targetPosition.bottom - treePosition.top;
+          indicatorTop = iconPosition.bottom - treePosition.top;
         }
         dropIndicator.style.top = indicatorTop + 'px';
-        dropIndicator.style.left = (targetPosition.right - treePosition.left) + 'px';
+        dropIndicator.style.left = (iconPosition.right - treePosition.left) + 'px';
 
         if (dropType === 'inner') {
           addClass(dropNode.$el, 'is-drop-inner');
@@ -447,17 +450,21 @@
         event.dataTransfer.dropEffect = 'move';
 
         if (draggingNode && dropNode) {
-          const data = draggingNode.node.data;
-          if (dropType === 'before') {
-            draggingNode.node.remove();
-            dropNode.node.parent.insertBefore({ data }, dropNode.node);
-          } else if (dropType === 'after') {
-            draggingNode.node.remove();
-            dropNode.node.parent.insertAfter({ data }, dropNode.node);
-          } else if (dropType === 'inner') {
-            dropNode.node.insertChild({ data });
+          const draggingNodeCopy = { data: draggingNode.node.data };
+          if (dropType !== 'none') {
             draggingNode.node.remove();
           }
+          if (dropType === 'before') {
+            dropNode.node.parent.insertBefore(draggingNodeCopy, dropNode.node);
+          } else if (dropType === 'after') {
+            dropNode.node.parent.insertAfter(draggingNodeCopy, dropNode.node);
+          } else if (dropType === 'inner') {
+            dropNode.node.insertChild(draggingNodeCopy);
+          }
+          if (dropType !== 'none') {
+            this.store.registerNode(draggingNodeCopy);
+          }
+
           removeClass(dropNode.$el, 'is-drop-inner');
 
           this.$emit('node-drag-end', draggingNode.node, dropNode.node, dropType, event);

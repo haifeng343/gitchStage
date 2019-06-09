@@ -23,6 +23,21 @@ a {
 .el-button--small, .el-button--small.is-round {
     padding: 12px 15px;
 }
+.cascader .el-dialog__body{
+    padding: 30px 20px 20px;
+}
+.cascader .el-input--small .el-input__inner{
+    text-align: center;
+    border-radius: 25px;
+    background-color: #F3F3F3;
+    border-color: transparent;
+}
+.cascaderDiv{
+    max-height: 350px;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    margin-top: 30px;
+}
 .el-table th{
     background-color: #F6F6F6 !important;
     height: 53px !important;

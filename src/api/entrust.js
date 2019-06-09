@@ -509,6 +509,13 @@ export function modifyManagerCallCenterDelegateExportStatus(params) {
   })
 }
 
+// 委托活动自动匹配
+export function callcenterDelegateDatamatch(params) {
+  return fetch('/api/agent/manager/callcenter/delegate/datamatch', 'post', params).then(res => {
+    return Promise.resolve(res)
+  })
+}
+
 // 查询委托公共池数据列表
 export function getManagerCallCenterDelegateCommonList(params) {
   return fetch('/api/agent/manager/callcenter/delegate/export/common/list', 'post', params).then(res => {
