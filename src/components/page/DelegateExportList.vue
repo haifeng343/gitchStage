@@ -621,32 +621,31 @@ export default {
     },
     changeName(value) {
       console.log(this.pushStatusForm.storeId);
-      // this.storeId = this.pushStatusForm.storeId
-      // if (this.pushStatusForm.storeId.length < 3) {
-      //   this.$message.error('');
-      //   return;
-      // }
-      // let arr = [];
-      // let a = this.options.filter(x => {
-      //   return x.Id == this.pushStatusForm.storeId[0];
-      // });
-      // a = a[0];
-      // arr.push(a.Name);
-      // if (a.Children.length > 0) {
-      //   let b = a.Children.filter(y => {
-      //     return y.Id == this.pushStatusForm.storeId[1];
-      //   });
-      //   b = b[0];
-      //   arr.push(b.Name);
-      //   if (b.Children.length > 0) {
-      //     let c = b.Children.filter(z => {
-      //       return z.Id == this.pushStatusForm.storeId[2];
-      //     });
-      //     c = c[0];
-      //     arr.push(c.Name);
-      //   }
-      // }
-      // this.storeValue = arr.join('/');
+      if (this.pushStatusForm.storeId.length < 3) {
+        this.$message.error('');
+        return;
+      }
+      let arr = [];
+      let a = this.optionsAll.filter(x => {
+        return x.Id == this.pushStatusForm.storeId[0];
+      });
+      a = a[0];
+      arr.push(a.Name);
+      if (a.Children.length > 0) {
+        let b = a.Children.filter(y => {
+          return y.Id == this.pushStatusForm.storeId[1];
+        });
+        b = b[0];
+        arr.push(b.Name);
+        if (b.Children.length > 0) {
+          let c = b.Children.filter(z => {
+            return z.Id == this.pushStatusForm.storeId[2];
+          });
+          c = c[0];
+          arr.push(c.Name);
+        }
+      }
+      this.storeValue = arr.join('/');
     },
     changeData(value) {
       if (this.optionValue.length < 3) {
