@@ -156,24 +156,38 @@
     </div>
     <!--复制-->
     <el-dialog :title="titletup" class="cascader" :visible.sync="copyVisible" width="600px">
-      <el-input
-        v-model="exportName"
-        placeholder="搜索商家内容"
-        style="width:476px;text-align:center;margin-right:20px"
-        icon="el-icon-search"
-      ></el-input>
-      <el-button @click="exportSearch" type="primary">搜 索</el-button>
-      <el-checkbox v-model="type" style="margin-top:15px">按委托标签搜索（）</el-checkbox>
-      <div class="cascaderDiv" style="margin-top:15px">
-        <el-cascader-panel
-          ref="cascaderAddr"
-          :options="options"
-          v-model="optionValue"
-          :props="props"
-          @change="changeData"
-        ></el-cascader-panel>
+      <label>目标：</label>
+      <el-select v-model="selected" placeholder="请选择">
+        <el-option v-for="item in selectList" :key="item.Id" :label="item.Name" :value="item.Id"></el-option>
+      </el-select>
+      <el-checkbox-group v-model="tagCheckList2" v-if="selected==1" style="margin-top:20px">
+        <el-checkbox
+          v-for="item in tagList2"
+          v-model="item.IsSelect"
+          :label="item"
+          :key="item.DelegateTagId"
+          style="margin-right:10px"
+        >{{item.DelegateTagName}}</el-checkbox>
+      </el-checkbox-group>
+      <div v-if="selected==2" style="margin-top:15px">
+        <el-input
+          v-model="exportName"
+          placeholder="搜索商家内容"
+          style="width:476px;text-align:center;margin-right:20px"
+          icon="el-icon-search"
+        ></el-input>
+        <el-button @click="exportSearch" type="primary">搜 索</el-button>
+        <el-checkbox v-model="type" style="margin-top:15px">按委托标签搜索（）</el-checkbox>
+        <div class="cascaderDiv" style="margin-top:15px">
+          <el-cascader-panel
+            :options="options"
+            v-model="optionValue"
+            :props="props"
+            @change="changeData"
+          ></el-cascader-panel>
+        </div>
       </div>
-      <p style="margin-top: 20px;">复制到：{{exportValue}}</p>
+      <p style="margin-top: 20px;">复制到：{{selected==1?'系统公共池':exportValue}}</p>
       <span slot="footer" class="dialog-footer">
         <el-button @click="copyVisible = false">取 消</el-button>
         <el-button type="primary" @click="copySure">确 定</el-button>
@@ -582,9 +596,13 @@ export default {
       typeCheck: 0, //Type 2
       tagCheckList: [],
       tagList: [],
+      tagCheckList2: [],
+      tagList2: [],
       onShow: false,
       typeRelCheck: 1, //推送默认选中
-      optionsAll: []
+      optionsAll: [],
+      selectList: [{ Id: 1, Name: "系统公共池" }, { Id: 2, Name: "其他门店" }],
+      selected: 2
     };
   },
   watch: {
@@ -660,52 +678,77 @@ export default {
     //复制
     opencopyForm(item) {
       this.Id = item.Id;
+      this.tagList2 = item.TagList;
+      if(item.TagList!=null){
+        this.tagCheckList2 = item.TagList.filter(e => {
+          return e.IsSelect == true;
+        });
+      }else{
+        this.tagCheckList2 =[];
+      }
       this.titletup = "复制-" + item.FatherName + "/" + item.MotherName;
       this.copyVisible = true;
-      this._DelegateRelList();
-    },
-    //推送状态搜索
-    exportSearchName() {
-      this._DelegateRelNameList();
-    },
-    //级联
-    _DelegateRelNameList() {
-        if (this.typeId == true) {
-          this.typeRelCheck = 1;
-        } else {
-          this.typeRelCheck = 0;
-        }
-      const params = {
-        Id: this.Id,
-        Type: this.typeRelCheck,
-        SellerName: this.exportName
-      };
-      getManagerCallCenterDelegateRelList(params).then(res => {
-        this.optionsAll = res.Data;
-      });
-    },
-    //复制搜索
-    exportSearch() {
-      this._DelegateRelList();
-    },
-    //级联
-    _DelegateRelList() {
       if (this.type == true) {
         this.typeCheck = 2;
       } else {
         this.typeCheck = 0;
       }
-      const params = {
-        Id: this.Id,
-        Type: this.typeCheck,
-        SellerName: this.exportName
-      };
-      getManagerCallCenterDelegateRelList(params).then(res => {
-        this.options = res.Data;
+      this._DelegateRelList(this.Id, this.typeCheck, this.exportName).then(
+        res => {
+          this.options = res.Data;
+        }
+      );
+    },
+    //推送状态搜索
+    exportSearchName() {
+      if (this.typeId == true) {
+        this.typeRelCheck = 1;
+      } else {
+        this.typeRelCheck = 0;
+      }
+      this._DelegateRelList(this.Id,this.typeRelCheck,this.exportName).then(res=>{
+        this.optionsAll = res.Data;
       });
     },
+    //复制搜索
+    exportSearch() {
+      if (this.type == true) {
+        this.typeCheck = 2;
+      } else {
+        this.typeCheck = 0;
+      }
+      this._DelegateRelList(this.Id, this.typeCheck, this.exportName).then(
+        res => {
+          this.options = res.Data;
+        }
+      );
+    },
+    //级联
+    _DelegateRelList(Id, type, exportName) {
+      const params = {
+        Id: Id,
+        Type: type,
+        SellerName: exportName
+      };
+      return getManagerCallCenterDelegateRelList(params);
+    },
     copySure() {
-      this.copyVisible = false;
+      const params = {
+        Id: this.Id,
+        PushStatus: 5,
+        PushDelegateId: this.selected == 1 ? 0 : this.optionValue[1],
+        PushAccountId: this.selected == 1 ? 0 : this.optionValue[2],
+        Remark: "",
+        TagList: this.selected == 2 ? [] : this.tagCheckList2
+      };
+      this._modifyManagerCallCenterDelegateExportStatus(params).then( res => {
+        this.$message({
+          message:"复制成功",
+          type:"success",
+          showClose:true
+        })
+        this.copyVisible = false;
+      })
     },
     init() {
       this.delegateId = this.$route.params.id;
@@ -765,10 +808,6 @@ export default {
     //直接推送
     openPushStatusForm(item) {
       console.log(item);
-      this._DelegateRelNameList();
-      if(this.pushStatusForm.pushStore =="" || this.pushStatusForm.pushStore =="/"){
-          this.typeId = false;
-        }
       this.tagList = item.TagList;
       this.tagCheckList = item.TagList.filter(e => {
         return e.IsSelect == true;
@@ -792,10 +831,29 @@ export default {
     pushStatusFormOk() {
       this.$refs["pushStatusForm"].validate(valid => {
         if (valid) {
-          this._modifyManagerCallCenterDelegateExportStatus().then(val => {
-            this.pushStatusVisible = false;
-            this._getManagerCallCenterDelegateExportList();
-          });
+          const params = {
+            Id: this.pushStatusForm.exportId,
+            PushStatus:
+              this.pushStatusForm.pushStatus == 5
+                ? 4
+                : this.pushStatusForm.pushStatus,
+            PushDelegateId:
+              this.pushStatusForm.pushStatus == 5
+                ? 0
+                : this.pushStatusForm.storeId[1],
+            PushAccountId:
+              this.pushStatusForm.pushStatus == 5
+                ? 0
+                : this.pushStatusForm.storeId[2],
+            Remark: this.pushStatusForm.remark,
+            TagList: this.tagCheckList
+          };
+          this._modifyManagerCallCenterDelegateExportStatus(params).then(
+            val => {
+              this.pushStatusVisible = false;
+              this._getManagerCallCenterDelegateExportList();
+            }
+          );
         } else {
           return false;
         }
@@ -1024,24 +1082,7 @@ export default {
       return getManagerCallCenterDelegateRelList(params);
     },
     //修改委托活动导出列表推送状态
-    _modifyManagerCallCenterDelegateExportStatus() {
-      const params = {
-        Id: this.pushStatusForm.exportId,
-        PushStatus:
-          this.pushStatusForm.pushStatus == 5
-            ? 4
-            : this.pushStatusForm.pushStatus,
-        PushDelegateId:
-          this.pushStatusForm.pushStatus == 5
-            ? 0
-            : this.pushStatusForm.storeId[1],
-        PushAccountId:
-          this.pushStatusForm.pushStatus == 5
-            ? 0
-            : this.pushStatusForm.storeId[2],
-        Remark: this.pushStatusForm.remark,
-        TagList: this.tagCheckList
-      };
+    _modifyManagerCallCenterDelegateExportStatus(params) {
       return modifyManagerCallCenterDelegateExportStatus(params);
     },
     //查询委托公共池数据列表
