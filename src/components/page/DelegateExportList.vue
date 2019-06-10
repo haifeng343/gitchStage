@@ -89,6 +89,7 @@
             <span v-if="scope.row.RecordFile!=null&&scope.row.RecordFile.length>0">
               <el-button type="text" @click="RecordListen(scope.row)">录音听取</el-button>
             </span>
+            <el-button type="text" icon="el-icon-document-copy" @click="opencopyForm(scope.row)">复制</el-button>
             <el-button type="text" icon="el-icon-edit" @click="openRemarkForm(scope.row)">备注</el-button>
             <el-button type="text" icon="el-icon-edit" @click="openBackForm(scope.row)">回退记录</el-button>
             <el-button
@@ -153,6 +154,32 @@
         ></el-pagination>
       </div>
     </div>
+    <!--复制-->
+    <el-dialog :title="titletup" class="cascader" :visible.sync="copyVisible" width="600px">
+      <el-input
+        v-model="exportName"
+        placeholder="搜索商家内容"
+        style="width:476px;text-align:center;margin-right:20px"
+        icon="el-icon-search"
+      ></el-input>
+      <el-button @click="exportSearch" type="primary">搜 索</el-button>
+      <el-checkbox v-model="type" style="margin-top:15px">按委托标签搜索（）</el-checkbox>
+      <div class="cascaderDiv" style="margin-top:15px">
+        <el-cascader-panel
+          ref="cascaderAddr"
+          :options="options"
+          v-model="optionValue"
+          :props="props"
+          @change="changeData"
+        ></el-cascader-panel>
+      </div>
+      <p style="margin-top: 20px;">复制到：{{exportValue}}</p>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="copyVisible = false">取 消</el-button>
+        <el-button type="primary" @click="copySure">确 定</el-button>
+      </span>
+    </el-dialog>
+
     <!-- 业务员弹出框 -->
     <el-dialog
       :title="`业务员-${accountForm.AccountName}`"
@@ -300,7 +327,7 @@
     <el-dialog
       :title="`推送状态-${pushStatusForm.childName}`"
       :visible.sync="pushStatusVisible"
-      width="630px"
+      width="700px"
     >
       <el-form :inline="true" class="demo-form-inline" ref="pushStatusForm" :model="pushStatusForm">
         <el-form-item label="导出人员：" label-width="120px" prop="pushAccount">
@@ -319,14 +346,56 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="推送至：" label-width="120px" prop="storeId">
-          <el-cascader
+        <el-form-item
+          label="委托标签:"
+          label-width="120px"
+          v-if="pushStatusForm.pushStatus==4 || pushStatusForm.pushStatus==5"
+        >
+          <el-checkbox-group v-model="tagCheckList" style="width:300px">
+            <el-checkbox
+              v-for="item in tagList"
+              v-model="item.IsSelect"
+              :label="item"
+              :key="item.DelegateTagId"
+              style="margin-right:10px"
+            >{{item.DelegateTagName}}</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+        <el-form-item
+          label="推送至："
+          label-width="120px"
+          prop="storeId"
+          v-if="pushStatusForm.pushStatus==3 || pushStatusForm.pushStatus==4"
+        >
+          <el-input v-model="storeValue" style="width:300px;margin-bottom:10px" disabled></el-input>
+          <i
+            style="position:absolute;right:10px;top:12px;cursor: pointer;"
+            class="el-icon-arrow-down"
+            @click="dropDown"
+          ></i>
+          <div class="capos" v-if="onShow">
+            <el-input
+              v-model="exportName"
+              placeholder="搜索商家内容"
+              style="width:214px;margin-right:20px"
+              icon="el-icon-search"
+            ></el-input>
+            <el-button @click="exportSearchName" type="primary">搜 索</el-button>
+            <el-checkbox v-model="typeId">按建议推送至门店</el-checkbox>
+            <el-cascader-panel
+              :options="optionsAll"
+              v-model="pushStatusForm.storeId"
+              :props="pushStatusForm.props"
+              @change="changeName"
+            ></el-cascader-panel>
+          </div>
+          <!-- <el-cascader
             :options="pushStatusForm.storeIdList"
             v-model="pushStatusForm.storeId"
             :props="pushStatusForm.props"
             style="width:300px;"
             :disabled="pushStatusForm.pushStatus!=3"
-          ></el-cascader>
+          ></el-cascader>-->
         </el-form-item>
         <el-form-item label="备注：" label-width="120px">
           <el-input type="textarea" rows="6" style="width:300px;" v-model="pushStatusForm.remark"></el-input>
@@ -397,7 +466,19 @@ export default {
       appointmentCount: 0,
       arriveCount: 0,
       invalidCount: 0,
-
+      copyVisible: false,
+      titletup: "",
+      exportName: "", //搜索导出名单商家
+      options: [], //级联数据
+      optionValue: ["", "", ""], //选中的值
+      Id: "",
+      props: {
+        value: "Id",
+        label: "Name",
+        children: "Children"
+      },
+      storeValue: "", //推送 选中的值
+      typeId: true, //按建议推送至门店
       searchChildName: "",
       searchAccountName: "",
       searchMobile: "",
@@ -418,7 +499,6 @@ export default {
         { id: 2, name: "需主管确认" },
         { id: 3, name: "推送至其他门店" }
       ],
-
       accountVisible: false,
       accountForm: {
         AccountName: "",
@@ -426,7 +506,6 @@ export default {
         IDCardNo: "",
         Mobile: ""
       },
-
       remarkVisible: false,
       remarkForm: {
         AccountName: "",
@@ -434,24 +513,20 @@ export default {
         sellerRemark: "",
         AccountRemark: ""
       },
-
       exportVisible: false,
       passwordChecked: true,
       exportPassword: "",
       exportValue: [],
       exportFilePath: "",
       exportFileName: "",
-
       iframeVisible: false,
       iframeUrl: "",
-
       backVisible: false,
       back_cur_page: 1, //页码
       back_pagesize: 30, //每页数量
       back_pageCount: 0, //总条数
       backForm: [],
       back_detailsId: 0,
-
       deleteVisible: false,
       deleteForm: {
         Id: 0,
@@ -461,7 +536,6 @@ export default {
         SelectedReason: ""
       },
       deleteFormReason: [],
-
       pushStatusVisible: false,
       pushStatusForm: {
         exportId: "",
@@ -470,7 +544,9 @@ export default {
         pushStatusList: [
           { id: 1, name: "直接推送" },
           { id: 2, name: "需主管确认" },
-          { id: 3, name: "推送至门店" }
+          { id: 3, name: "推送至门店" },
+          { id: 4, name: "意向委托" },
+          { id: 5, name: "系统公共池" }
         ],
         props: {
           value: "Id",
@@ -483,7 +559,6 @@ export default {
         pushAccount: "",
         pushStore: ""
       },
-
       repushStatusVisible: false,
       repushStatusForm: {
         commonId: "",
@@ -498,11 +573,18 @@ export default {
         storeIdList: [],
         remark: ""
       },
-
       tableData2: [], //列表数据
       cur_page2: 1, //页码
       pagesize2: 30, //每页数量
-      pageCount2: 0 //总条数
+      pageCount2: 0, //总条数
+      exportValue: "", //复制到
+      type: true, //默认选中
+      typeCheck: 0, //Type 2
+      tagCheckList: [],
+      tagList: [],
+      onShow: true,
+      typeRelCheck: 1, //推送默认选中
+      optionsAll: []
     };
   },
   watch: {
@@ -516,6 +598,115 @@ export default {
     this.init();
   },
   methods: {
+    dropDown() {
+      this.onShow = !this.onShow;
+    },
+    changeName(value) {
+      console.log(this.pushStatusForm.storeId);
+      // this.storeId = this.pushStatusForm.storeId
+      // if (this.pushStatusForm.storeId.length < 3) {
+      //   this.$message.error('');
+      //   return;
+      // }
+      // let arr = [];
+      // let a = this.options.filter(x => {
+      //   return x.Id == this.pushStatusForm.storeId[0];
+      // });
+      // a = a[0];
+      // arr.push(a.Name);
+      // if (a.Children.length > 0) {
+      //   let b = a.Children.filter(y => {
+      //     return y.Id == this.pushStatusForm.storeId[1];
+      //   });
+      //   b = b[0];
+      //   arr.push(b.Name);
+      //   if (b.Children.length > 0) {
+      //     let c = b.Children.filter(z => {
+      //       return z.Id == this.pushStatusForm.storeId[2];
+      //     });
+      //     c = c[0];
+      //     arr.push(c.Name);
+      //   }
+      // }
+      // this.storeValue = arr.join('/');
+    },
+    changeData(value) {
+      if (this.optionValue.length < 3) {
+        this.$message.error("");
+        return;
+      }
+      let arr = [];
+      let a = this.options.filter(x => {
+        return x.Id == this.optionValue[0];
+      });
+      a = a[0];
+      arr.push(a.Name);
+      if (a.Children.length > 0) {
+        let b = a.Children.filter(y => {
+          return y.Id == this.optionValue[1];
+        });
+        b = b[0];
+        arr.push(b.Name);
+        if (b.Children.length > 0) {
+          let c = b.Children.filter(z => {
+            return z.Id == this.optionValue[2];
+          });
+          c = c[0];
+          arr.push(c.Name);
+        }
+      }
+      this.exportValue = arr.join("/");
+    },
+    //复制
+    opencopyForm(item) {
+      this.Id = item.Id;
+      this.titletup = "复制-" + item.FatherName + "/" + item.MotherName;
+      this.copyVisible = true;
+      this._DelegateRelList();
+    },
+    //推送状态搜索
+    exportSearchName() {
+      this._DelegateRelNameList();
+    },
+    //级联
+    _DelegateRelNameList() {
+        if (this.typeId == true) {
+          this.typeRelCheck = 1;
+        } else {
+          this.typeRelCheck = 0;
+        }
+      const params = {
+        Id: this.Id,
+        Type: this.typeRelCheck,
+        SellerName: this.exportName
+      };
+      getManagerCallCenterDelegateRelList(params).then(res => {
+        this.optionsAll = res.Data;
+      });
+    },
+    //复制搜索
+    exportSearch() {
+      this._DelegateRelList();
+    },
+    //级联
+    _DelegateRelList() {
+      if (this.type == true) {
+        this.typeCheck = 2;
+      } else {
+        this.typeCheck = 0;
+      }
+      const params = {
+        Id: this.Id,
+        Type: this.typeCheck,
+        SellerName: this.exportName
+      };
+      getManagerCallCenterDelegateRelList(params).then(res => {
+        this.options = res.Data;
+      });
+    },
+    copySure() {
+      this.copyVisible = false;
+    },
     init() {
       this.delegateId = this.$route.params.id;
       this._getManagerCallCenterDelegateExportList();
@@ -571,7 +762,17 @@ export default {
           return "未知";
       }
     },
+    //直接推送
     openPushStatusForm(item) {
+      console.log(item);
+      this._DelegateRelNameList();
+      if(this.pushStatusForm.pushStore =="" || this.pushStatusForm.pushStore =="/"){
+          this.typeId = false;
+        }
+      this.tagList = item.TagList;
+      this.tagCheckList = item.TagList.filter(e => {
+        return e.IsSelect == true;
+      });
       this.pushStatusVisible = true;
       this._getManagerCallCenterDelegateRelList(item.SellerId).then(res => {
         res.Data.forEach(item => {
@@ -579,7 +780,7 @@ export default {
             item2.Children.unshift({ Id: 0, Name: "公共池" });
           });
         });
-        this.pushStatusForm.storeIdList = res.Data;
+        this.optionsAll = res.Data;
       });
       this.pushStatusForm.childName = item.ChildName;
       this.pushStatusForm.pushStatus = item.PushStatus;
@@ -749,8 +950,8 @@ export default {
         pagecount: this.pagesize,
         StartTime: this.searchTime == null ? "" : this.searchTime[0],
         EndTime: this.searchTime == null ? "" : this.searchTime[1],
-        Status:this.searchStatus,
-        PushStatus:this.searchPushStatus
+        Status: this.searchStatus,
+        PushStatus: this.searchPushStatus
       };
       return getManagerCallCenterDelegateExportList(params).then(res => {
         this.tableData = res.Data.List;
@@ -826,10 +1027,20 @@ export default {
     _modifyManagerCallCenterDelegateExportStatus() {
       const params = {
         Id: this.pushStatusForm.exportId,
-        PushStatus: this.pushStatusForm.pushStatus,
-        PushDelegateId: this.pushStatusForm.storeId[1],
-        PushAccountId: this.pushStatusForm.storeId[2],
-        Remark: this.pushStatusForm.remark
+        PushStatus:
+          this.pushStatusForm.pushStatus == 5
+            ? 4
+            : this.pushStatusForm.pushStatus,
+        PushDelegateId:
+          this.pushStatusForm.pushStatus == 5
+            ? 0
+            : this.pushStatusForm.storeId[1],
+        PushAccountId:
+          this.pushStatusForm.pushStatus == 5
+            ? 0
+            : this.pushStatusForm.storeId[2],
+        Remark: this.pushStatusForm.remark,
+        TagList: this.tagCheckList
       };
       return modifyManagerCallCenterDelegateExportStatus(params);
     },
@@ -907,5 +1118,16 @@ export default {
   background-color: #3a8ee6;
   top: 1px;
   left: -8px;
+}
+.capos {
+  width: 300px;
+}
+.el-cascader-panel.is-bordered {
+  border: none;
+}
+</style>
+<style>
+.el-checkbox__label {
+  margin-right: 10px;
 }
 </style>

@@ -1,0 +1,48 @@
+{
+  "_args": [
+    [
+      "china-area-data@4.0.0",
+      "E:\\woker\\gitch"
+    ]
+  ],
+  "_from": "china-area-data@4.0.0",
+  "_id": "china-area-data@4.0.0",
+  "_inBundle": false,
+  "_integrity": "sha512-RG9b/ic5ZIGrPXfWgeDvf1DpMZyD6jKAi5ZBjzAlt500nF5uqH9javgKC7ookGtJzFPHwc7+9hs8NRiGj+nFNw==",
+  "_location": "/china-area-data",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "china-area-data@4.0.0",
+    "name": "china-area-data",
+    "escapedName": "china-area-data",
+    "rawSpec": "4.0.0",
+    "saveSpec": null,
+    "fetchSpec": "4.0.0"
+  },
+  "_requiredBy": [
+    "/element-china-area-data"
+  ],
+  "_resolved": "https://registry.npmjs.org/china-area-data/-/china-area-data-4.0.0.tgz",
+  "_spec": "4.0.0",
+  "_where": "E:\\woker\\gitch",
+  "author": {
+    "name": "airyland@qq.com"
+  },
+  "description": "中国省份城市区数据",
+  "keywords": [
+    "中国省份",
+    "行政区域",
+    "城市",
+    "省市区",
+    "vux"
+  ],
+  "license": "MIT",
+  "main": "data.js",
+  "name": "china-area-data",
+  "scripts": {
+    "build": "node scripts/format && node scripts/vux"
+  },
+  "version": "4.0.0"
+}

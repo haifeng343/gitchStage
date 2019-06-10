@@ -1,0 +1,233 @@
+<template>
+  <div class="table">
+    <div class="container">
+      <el-form :inline="true" class="demo-form-inline">
+        <el-form-item label="孩子姓名:">
+          <el-input v-model="childrenName" placeholder="请输入孩子姓名"></el-input>
+        </el-form-item>
+        <el-form-item label="拨打人员:">
+          <el-input v-model="callName" placeholder="请输入拨打人员"></el-input>
+        </el-form-item>
+        <el-form-item label="委托意向标签:">
+          <el-input v-model="sub" placeholder="请输入委托意向标签"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="search()">搜索</el-button>
+        </el-form-item>
+        <!-- <el-button type="primary" style="float:right">自动匹配</el-button> -->
+      </el-form>
+
+      <el-table :data="tableData" fixed border ref="multipleTable">
+        <el-table-column prop="Id" align="center" label="ID"></el-table-column>
+        <el-table-column prop="SellerName" align="center" label="父/母名称">
+          <template slot-scope="scope">{{scope.row.FatherName}}/{{scope.row.MotherName}}</template>
+        </el-table-column>
+        <el-table-column prop="ChildName" align="center" label="孩子姓名"></el-table-column>
+        <el-table-column prop="AccountName" align="center" label="拨打人员"></el-table-column>
+        <el-table-column align="center" label="委托标签">
+          <template slot-scope="scope">
+            <el-button type="text" @click="changeTag(scope.row)">{{ scope.row.DelegateTag }}</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="转入来源">
+          <template slot-scope="scope">
+            <span>{{ scope.row.Source ==0 ? "推送转入":"复制转入"}}</span>
+          </template>
+        </el-table-column>
+        <!-- <el-table-column prop="Id" align="center" label="转入委托"></el-table-column>
+        <el-table-column prop="SellerName" align="center" label="转入人"></el-table-column>-->
+        <el-table-column align="center" label="操作" width="230px">
+          <template slot-scope="scope">
+            <el-button type="text" @click="exportTo(scope.row)">导出到名单</el-button>
+            <el-button type="text" class="red" @click="deleteData(scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!--委托意向标签-->
+      <el-dialog :title="titletup" :visible.sync="tagVisible" width="600px">
+        <el-checkbox-group v-model="tagCheckList">
+            <el-checkbox v-for="item in tagList" v-model="item.IsSelect" :label="item" :key="item.DelegateTagId">{{item.DelegateTagName}}</el-checkbox>
+        </el-checkbox-group>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="tagVisible = false">取 消</el-button>
+          <el-button type="primary" @click="modifyTag">确 定</el-button>
+        </span>
+      </el-dialog>
+
+      <!--导出-->
+      <el-dialog :title="titletup" class="cascader" :visible.sync="exportVisible" width="500px">
+        <el-input v-model="exportName" placeholder="搜索商家内容" style="width:376px;text-align:center;margin-right:20px" icon="el-icon-search"></el-input>
+        <el-button @click="exportSearch" type="primary">搜 索</el-button>
+        <div class="cascaderDiv">
+          <!-- <el-cascader-panel :options="options"></el-cascader-panel> -->
+        </div>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="exportVisible = false">取 消</el-button>
+          <el-button type="primary" @click="exportSure">确 定</el-button>
+        </span>
+      </el-dialog>
+      
+      <div class="pagination">
+        <el-pagination
+          background
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :page-sizes="[10, 20, 30, 40, 50]"
+          :current-page="currentPage"
+          :page-size="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="pageCount"
+        ></el-pagination>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { getManagerCallCenterDelegateCommonList, delegateExportTag, delegateExportTagModify, deleteManagerCallCenterDelegateCommon, getManagerCallCenterDelegateRelList } from "api/entrust.js";
+export default {
+  data() {
+    return {
+      childrenName: "",
+      callName: "",
+      sub: "",
+      tableData: [],
+      currentPage: 1,
+      pageSize: 30,
+      pageCount: 0,
+      tagVisible:false,
+      exportVisible:false,
+      titletup:'',
+      Id : '',
+      tagCheckList:[],
+      tagList:[],
+      exportName:'',//搜索导出名单商家
+      options:[],//级联数据
+    };
+  },
+  mounted() {
+    this.getData(0);
+    this._delegateExportTag();
+  },
+  methods: {
+    getData() {
+      const parmas = {
+        Id: 0,
+        DelegateTagId: 0,
+        AccountName: this.callName,
+        ChildName: this.childrenName,
+        pageindex: this.currentPage,
+        pagecount: this.pageSize
+      };
+      getManagerCallCenterDelegateCommonList(parmas).then(res => {
+        this.tableData = res.Data.List;
+        this.pageCount = res.Data.TotalCount;
+      });
+    },
+    search() {
+      this.currentPage = 1;
+      this.getData();
+    },
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this.getData();
+    },
+    handleCurrentChange(val) {
+      this.currentPage = val;
+      this.getData();
+    },
+    //打开委托标签列表
+    changeTag(item) {
+        // console.log(item)
+        this.Id = item.Id;
+        this.titletup = "委托意向标签-"+item.AccountName;
+        this.tagVisible = true;
+        this.tagCheckList = this.tagList.filter(e => {
+            return e.IsSelect == true;
+        })
+        console.log(this.tagList)
+    },
+    exportSearch() {
+      this._getManagerCallCenterDelegateRelList();
+    },
+    //级联
+    _getManagerCallCenterDelegateRelList() {
+      const params = {
+        Id : 0,
+        Type : 0,
+        SellerName : this.exportName
+      }
+      getManagerCallCenterDelegateRelList(params).then( res => {
+        this.options = res.Data.List;
+        console.log(res);
+      })
+    },
+    //委托标签列表
+    _delegateExportTag() {
+        const parmas = {
+            Id : this.Id
+        }
+        delegateExportTag(parmas).then( res => {
+            this.tagList = res.Data;
+        })
+    },
+    _delegateExportTagModify() {
+        const parmas = {
+            CommonId : this.Id,
+            List : this.tagCheckList
+        }
+        delegateExportTagModify(parmas).then( res => {
+            this.$message({
+                message:"修改成功",
+                showClose: true,
+                type:"success"
+            })
+        })
+    },
+    modifyTag() {
+        this.tagVisible = false;
+        this._delegateExportTagModify();
+    },
+    deleteData(item) {
+      this.$confirm("此操作将永久删除该项, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        this._deleteManagerCallCenterDelegateCommon(item.Id).then(val => {
+          this.getData();
+          this.$message({
+            showClose: true,
+            message: "删除成功",
+            type: "success"
+          });
+        });
+      });
+    },
+    //导出
+    exportTo(item) {
+      // console.log(item);
+      this._getManagerCallCenterDelegateRelList();
+      this.titletup = "导出-"+item.FatherName + '/' + item.MotherName;
+      this.exportVisible = true;
+    },
+    exportSure() {
+      this.exportVisible = false;
+    },
+    _deleteManagerCallCenterDelegateCommon(Id) {
+      const params = {
+        Id: Id
+      };
+      return deleteManagerCallCenterDelegateCommon(params);
+    }
+  }
+};
+</script>
+
+<style lang="less" scoped>
+.el-checkbox__label{
+    margin-right: 15px;
+}
+</style>
+
