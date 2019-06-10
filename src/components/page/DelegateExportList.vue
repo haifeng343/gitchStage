@@ -582,7 +582,7 @@ export default {
       typeCheck: 0, //Type 2
       tagCheckList: [],
       tagList: [],
-      onShow: true,
+      onShow: false,
       typeRelCheck: 1, //推送默认选中
       optionsAll: []
     };
