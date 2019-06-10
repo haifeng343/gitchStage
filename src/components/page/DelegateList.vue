@@ -758,6 +758,44 @@ export default {
         }
       });
     },
+    //自动匹配
+    automaticMatch(item) {
+      this.ruleForm = {
+        duration: "",
+        dataSource: ""
+      };
+      this.Id = item.Id;
+      this.sellerName = item.SellerName;
+      this.matchVisible = true;
+      this.titletup = "自动匹配-" + item.Name;
+    },
+    _callcenterDelegateDatamatch() {
+      const params = {
+        DelegateId: this.Id,
+        Type: this.ruleForm.duration,
+        DataSource: this.ruleForm.dataSource
+      };
+      callcenterDelegateDatamatch(params).then(res => {
+        this.loading = false;
+        this.matchVisible = false;
+        this.$message({
+          type: "success",
+          message: "匹配成功",
+          showClose: true
+        });
+      });
+    },
+    matchSure(formName) {
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          this.loading = true;
+          this._callcenterDelegateDatamatch();
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
     ChangeData() {
       console.log("ssssss");
     },
